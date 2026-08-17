@@ -400,6 +400,15 @@ ul.markning-lista li{font-size:.94rem;color:var(--ink-2);line-height:1.6;padding
   border-left:2px solid var(--line-2);margin-bottom:7px}
 .panel.markning .note{font-size:.89rem;color:var(--muted)}
 
+/* ── Om-sektionen "Erik Mattsson" (17 aug 2026, Erik) ──
+   Avsändarrösten, direkt ovanför kontaktbandet. Inga nya färger, inga nya
+   typsnitt, ingen ram, ingen egen rörelse — bara .rise som varje annat band.
+   Brödtexten ligger i samma vokabulär som .sec-lede: dämpad benvit, 62ch
+   radlängd, samma radavstånd. Rubriken är sidans vanliga h2 utan kicker,
+   eftersom inget får stå ovanför namnet. */
+.omerik p{color:var(--ink-2);font-size:1.02rem;line-height:1.62;max-width:62ch}
+.omerik p+p{margin-top:17px}
+
 /* ── kontaktformulär ──
    Inga nya färger och inga nya typsnitt: fälten ligger på --bg-2 med samma
    ram som .panel, etiketterna använder monospacevokabuläret från .kicker och
@@ -1368,7 +1377,21 @@ a{transition:color 150ms ease,text-decoration-color 150ms ease}
     </div>
   </section>
 
-  <section id="kontakt" class="band band-b">
+  <section id="erik" class="band band-b">
+    <div class="wrap smal" data-stagger>
+      <div class="sec-head rise">
+        <h2>Erik Mattsson</h2>
+      </div>
+      <div class="omerik rise">
+        <p><span class="l-sv">Jag tror att säkerhet är en delad kapacitet, inte en avdelning.</span><span class="l-en">I believe safety is a shared capability, not a department.</span></p>
+        <p><span class="l-sv">Femton år inom tillverkning, avfall, medtech och kosmetik har lärt mig samma sak överallt: kunskapen finns redan i organisationen. Den är bara inlåst hos några få, i dokument som inte hålls levande.</span><span class="l-en">Fifteen years across manufacturing, waste, medtech and cosmetics taught me the same thing everywhere: the knowledge is already in the organisation. It is just locked up with a few people, in documents nobody keeps alive.</span></p>
+        <p><span class="l-sv">Jag bygger verktyg som släpper den fri. Ur problemet, inte ur tekniken. Krävs det en expert för att använda dem är de inte färdiga.</span><span class="l-en">I build tools that set it free. Out of the problem, never out of the technology. If it takes an expert to operate, it is not finished.</span></p>
+        <p><span class="l-sv">Undrar du hur mycket av er EHS-kapacitet som går att lyfta upp från dokument och in i vardagen? Hör av dig.</span><span class="l-en">Wondering how much of your EHS capacity could move out of documents and into everyday work? Get in touch.</span></p>
+      </div>
+    </div>
+  </section>
+
+  <section id="kontakt" class="band band-a">
     <div class="wrap smal" data-stagger>
       <div class="sec-head rise">
         <span class="l-sv kicker">Kontakt</span><span class="l-en kicker">Contact</span>
