@@ -394,6 +394,31 @@ ul.markning-lista li{font-size:.94rem;color:var(--ink-2);line-height:1.6;padding
   border-left:2px solid var(--line-2);margin-bottom:7px}
 .panel.markning .note{font-size:.89rem;color:var(--muted)}
 
+/* ── kontaktformulär ──
+   Inga nya färger och inga nya typsnitt: fälten ligger på --bg-2 med samma
+   ram som .panel, etiketterna använder monospacevokabuläret från .kicker och
+   knappen är den benvita ytan från den aktiva språkknappen. Träffytorna är
+   minst 48 px höga, som .metod summary på mobil. */
+.kform{margin-top:30px}
+.kfalt{margin-bottom:20px}
+.kfalt label{font-family:var(--fm);font-size:.7rem;font-weight:600;letter-spacing:.16em;
+  text-transform:uppercase;color:var(--muted);display:block;margin-bottom:9px}
+.kfalt input,.kfalt textarea{width:100%;font:inherit;font-size:1rem;color:var(--ink);
+  background:var(--bg-2);border:1px solid var(--line-2);border-radius:4px;
+  padding:13px 15px;min-height:50px;line-height:1.55;display:block}
+.kfalt textarea{resize:vertical;min-height:150px}
+.kfalt input:hover,.kfalt textarea:hover{border-color:var(--muted)}
+.kfalt input:focus,.kfalt textarea:focus{outline:2px solid var(--ink-2);outline-offset:2px;
+  border-color:var(--ink-2)}
+.knapp{appearance:none;border:0;cursor:pointer;font:inherit;font-family:var(--fm);
+  font-size:.76rem;font-weight:600;letter-spacing:.14em;text-transform:uppercase;
+  background:var(--ink);color:var(--bg);padding:15px 26px;min-height:52px;border-radius:999px;
+  display:inline-block}
+.knapp:hover{background:var(--ink-2)}
+.kform-not{margin-top:16px;font-size:.89rem;color:var(--muted);max-width:60ch;line-height:1.6}
+/* honeypot: aldrig synlig, aldrig i tabbordningen */
+.kform-honey{position:absolute;left:-9999px;width:1px;height:1px;overflow:hidden}
+
 /* ── fot ── */
 footer{border-top:1px solid var(--line);background:var(--bg-1)}
 footer .wrap{padding-top:40px;padding-bottom:52px}
@@ -478,6 +503,9 @@ a{transition:color 150ms ease,text-decoration-color 150ms ease}
   .more{margin-left:0;width:100%;margin-top:4px}
   .iso-stage{width:100%}
   .trend{min-width:560px}
+  /* kontaktformuläret på 390 px: full bredd, inget som kräver zoom */
+  .kfalt input,.kfalt textarea{font-size:1rem;padding:13px 14px}
+  .knapp{width:100%;text-align:center}
 }
 </style>
 </head>
@@ -503,6 +531,7 @@ a{transition:color 150ms ease,text-decoration-color 150ms ease}
       <a href="#omraden"><span class="l-sv">Områden</span><span class="l-en">Areas</span></a>
       <a href="#iso"><span class="l-sv">ISO och standarder</span><span class="l-en">ISO and standards</span></a>
       <a href="#om"><span class="l-sv">Om</span><span class="l-en">About</span></a>
+      <a href="#kontakt"><span class="l-sv">Kontakt</span><span class="l-en">Contact</span></a>
     </div>
   </nav>
 
@@ -1329,6 +1358,40 @@ a{transition:color 150ms ease,text-decoration-color 150ms ease}
         <p class="l-sv ram">Översiktlig veckoscanning utförd av AI.</p><p class="l-en ram">An overview level weekly scan carried out by AI.</p>
         <p class="isolink"><span class="l-sv"><a href="#iso">ISO-standarder: revisionsstatus för 9001, 14001 och 45001</a></span><span class="l-en"><a href="#iso">ISO standards: revision status for 9001, 14001 and 45001</a></span></p>
       </div>
+    </div>
+  </section>
+
+  <section id="kontakt" class="band band-b">
+    <div class="wrap smal" data-stagger>
+      <div class="sec-head rise">
+        <span class="l-sv kicker">Kontakt</span><span class="l-en kicker">Contact</span>
+        <h2 class="l-sv">Skriv till Erik</h2><h2 class="l-en">Write to Erik</h2>
+      </div>
+      <p class="sec-lede rise"><span class="l-sv">Frågor om veckans läge, om metoden bakom talet eller om verktyget — skriv här. Svaret går till adressen du fyller i.</span><span class="l-en">Questions about this week's reading, the method behind the number or the tool itself — write here. The reply goes to the address you enter.</span></p>
+      <form class="kform rise" action="https://formsubmit.co/d24d730e8448e39e06b3c044dd74a24d" method="POST" accept-charset="UTF-8">
+        <input type="hidden" name="_subject" value="Nytt meddelande från ehssentinel.com">
+        <input type="hidden" name="_captcha" value="false">
+        <input type="hidden" name="_template" value="table">
+        <input type="hidden" name="_next" value="https://ehssentinel.com/tack.html">
+        <div class="kform-honey" aria-hidden="true">
+          <label for="k-honey">Lämna tom</label>
+          <input id="k-honey" type="text" name="_honey" tabindex="-1" autocomplete="off">
+        </div>
+        <div class="kfalt">
+          <label for="k-namn"><span class="l-sv">Namn</span><span class="l-en">Name</span></label>
+          <input id="k-namn" name="name" type="text" autocomplete="name" maxlength="120" required>
+        </div>
+        <div class="kfalt">
+          <label for="k-epost"><span class="l-sv">E-post</span><span class="l-en">Email</span></label>
+          <input id="k-epost" name="email" type="email" autocomplete="email" maxlength="160" required>
+        </div>
+        <div class="kfalt">
+          <label for="k-meddelande"><span class="l-sv">Meddelande</span><span class="l-en">Message</span></label>
+          <textarea id="k-meddelande" name="message" rows="6" maxlength="4000" required></textarea>
+        </div>
+        <button class="knapp" type="submit"><span class="l-sv">Skicka meddelande</span><span class="l-en">Send message</span></button>
+        <p class="kform-not"><span class="l-sv">Adressen används bara för att svara. Inget nyhetsbrev, ingen vidareförsäljning.</span><span class="l-en">Your address is used only to reply. No newsletter, nothing passed on.</span></p>
+      </form>
     </div>
   </section>
 

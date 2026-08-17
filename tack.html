@@ -1,0 +1,513 @@
+<!DOCTYPE html>
+<html lang="sv">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="robots" content="noindex">
+<base href="./">
+<title>Tack — EHS Sentinel</title>
+<style>
+:root{
+  /* gråskala — allt utom de tre allvarsnivåerna */
+  --bg:#0b0c0e; --bg-1:#101216; --bg-2:#15181d; --bg-3:#1b1f25;
+  --ink:#f3f4f6; --ink-2:#b3b8c2; --muted:#767c87;
+  --line:#23272e; --line-2:#2d323a;
+  /* EXAKT tre färger = de tre allvarsnivåerna. Används ingen annanstans. */
+  --neg:#e2565a; --neu:#cf9a3a; --pos:#43a37d;
+  --fd:Georgia,"Iowan Old Style","Times New Roman",serif;
+  --fm:ui-monospace,SFMono-Regular,"SF Mono",Menlo,Consolas,"Liberation Mono",monospace;
+  --fb:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+  --pad:56px; /* .wrap-padding x2 — heroordets storlek räknas mot den */
+  --navh:50px; /* navigationsradens höjd — ankarhoppen räknas mot den */
+  --peek:52px; /* så mycket av bandet under heroen som ska titta fram (D7) */
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html{-webkit-text-size-adjust:100%;background:var(--bg)}
+/* overflow-x:clip, INTE hidden: hidden gör body till scrollport och slår ut
+   position:sticky på navigationsraden (D1c). clip klipper utan att scrolla. */
+body{font-family:var(--fb);background:var(--bg);color:var(--ink);font-size:16.5px;
+  line-height:1.6;-webkit-font-smoothing:antialiased;overflow-x:clip}
+img{max-width:100%}
+a{color:var(--ink);text-decoration:underline;text-decoration-color:var(--line-2);
+  text-underline-offset:3px}
+a:hover{text-decoration-color:var(--ink-2)}
+
+/* språkväxel: engelska är standard, båda språken ligger i sidan */
+html[data-lang="en"] .l-sv{display:none}
+html[data-lang="sv"] .l-en{display:none}
+
+/* ── rytm: bred (1180) → smal (660) → bred. Aldrig samma bredd två i rad ── */
+.wrap{width:100%;max-width:1180px;margin:0 auto;padding:0 28px}
+.wrap.smal{max-width:660px}
+.band{border-top:1px solid var(--line)}
+.band-a{background:var(--bg)}
+.band-b{background:var(--bg-1)}
+.band>.wrap{padding-top:74px;padding-bottom:74px}
+
+/* ── D7 punkt 1: radhuvudet. Litet, diskret: namn · vecka+år · språk ── */
+.topbar{height:54px;display:flex;align-items:center;position:relative;z-index:3}
+.topbar .wrap{display:flex;align-items:center;justify-content:space-between;gap:16px}
+.topbar-id{display:flex;align-items:baseline;gap:10px;min-width:0}
+.wordmark{font-family:var(--fm);font-size:.74rem;font-weight:600;letter-spacing:.2em;
+  text-transform:uppercase;color:var(--ink-2);white-space:nowrap}
+.topsep{color:var(--line-2)}
+.topweek{font-family:var(--fm);font-size:.72rem;font-weight:600;letter-spacing:.14em;
+  text-transform:uppercase;color:var(--muted);white-space:nowrap;
+  font-variant-numeric:tabular-nums}
+.lang{display:inline-flex;border:1px solid var(--line-2);border-radius:999px;overflow:hidden}
+.lang button{appearance:none;border:0;background:transparent;cursor:pointer;font:inherit;
+  font-family:var(--fm);font-size:.7rem;font-weight:600;color:var(--muted);padding:6px 13px;
+  min-height:34px;letter-spacing:.12em}
+.lang button+button{border-left:1px solid var(--line-2)}
+html[data-lang="sv"] .lang button[data-set="sv"],
+html[data-lang="en"] .lang button[data-set="en"]{background:var(--ink);color:var(--bg)}
+
+/* ── D7b: navigationsraden är visuellt UNDERORDNAD värderaden ──
+   Tunn, monospace, låg kontrast. Ligger som direkt barn till <body> så att
+   sticky gäller HELA sidan och inte bara första skärmen — sticky bär bara inom
+   sitt containing block. */
+.pagenav{position:sticky;top:0;z-index:5;background:var(--bg);
+  border-top:1px solid var(--line);border-bottom:1px solid var(--line)}
+.pagenav .wrap{display:flex;align-items:center;overflow-x:auto;
+  -webkit-overflow-scrolling:touch;scrollbar-width:none}
+.pagenav .wrap::-webkit-scrollbar{display:none}
+.pagenav a{font-family:var(--fm);font-size:.7rem;font-weight:600;letter-spacing:.16em;
+  text-transform:uppercase;color:var(--muted);text-decoration:none;white-space:nowrap;
+  min-height:var(--navh);display:inline-flex;align-items:center;
+  transition:color 150ms ease}
+.pagenav a+a{margin-left:26px}
+.pagenav a:hover,.pagenav a:focus-visible{color:var(--ink)}
+/* ankarhopp får inte landa under den fasta raden */
+section[id],footer[id]{scroll-margin-top:calc(var(--navh) + 20px)}
+
+/* ── D7: FOLDEN. Fem saker, inget mer. ───────────────────────────────
+   Heroen är hela folden under radhuvudet och navraden. min-height räknas mot
+   svh (mobilens synliga höjd) minus de två raderna MINUS --peek, så bandet
+   under heroen alltid tittar fram i underkant. Det är den detaljen som gör att
+   folden bjuder in till skroll i stället för att se ut som hela sidan.
+   Innehållet får växa förbi min-height — då skjuts bandet nedåt, aldrig
+   innehållet upp. */
+.hero{min-height:calc(100svh - 54px - var(--navh) - var(--peek));
+  display:flex;flex-direction:column;
+  padding:26px 0 18px;overflow:hidden}
+.hero .wrap{width:100%}
+.hero-inner{display:flex;flex-direction:column;flex:1;gap:0}
+
+/* D7 punkt 2: VÄRDERADEN. Stor, serif, ljus. Sidans första och tyngsta rad. */
+.varde{font-family:var(--fd);font-size:clamp(1.45rem,3.1vw,2.35rem);line-height:1.28;
+  letter-spacing:-.015em;max-width:30ch;color:var(--ink)}
+.varde-2{color:var(--ink-2)}
+
+/* D7 punkt 3: regimetiketten och talet mot skalan. Signaturmomentet.
+   margin:auto 0 delar den fria höjden LIKA mellan luften över etiketten och
+   luften under metodraden — då står värderaden i överkant, läget i mitten och
+   identiteten i underkant, oavsett skärmhöjd. */
+.hero-mid{margin:auto 0;padding-top:24px;padding-bottom:24px}
+/* Teckenstorleken räknas ur ordets uppmätta bredd (--em) och spaltens bredd,
+   så ordet alltid fyller spalten utan att spräcka den.
+   D3: benvit, ALDRIG larmfärg. Etiketten är en läsning av läget, inte en
+   larmnivå — rött/gult/grönt tillhör de enskilda signalområdena. */
+.hero-word{font-family:var(--fd);font-weight:700;text-transform:uppercase;
+  font-size:min(7.4rem, calc((min(1180px, 100vw) - var(--pad)) * 0.97 / var(--em)));
+  line-height:1.02;letter-spacing:-.025em;display:block;padding-bottom:.06em;
+  color:var(--ink)}
+.hero-figs{display:flex;align-items:flex-end;flex-wrap:wrap;gap:14px 30px;margin-top:10px}
+/* D3: talet i monospace, gråskala, intill den synliga skalan */
+.hero-num{font-family:var(--fm);font-weight:600;font-size:clamp(2.4rem,7.5vw,4.4rem);
+  line-height:1;letter-spacing:-.04em;font-variant-numeric:tabular-nums;color:var(--ink)}
+/* ── D1d: synlig skala −10..+10, så talet läses som en koordinat ── */
+.skala{flex:1 1 220px;max-width:400px;padding-bottom:9px}
+.skala-spar{position:relative;height:2px;background:var(--line-2)}
+.skala-mitt{position:absolute;left:50%;top:-5px;width:1px;height:12px;background:var(--line-2)}
+/* left sätts inline till markörens SLUTLÄGE. Rörelsen läggs på av JS ovanpå
+   det, aldrig som utgångsläge — utan JS står markören redan rätt. */
+.skala-markor{position:absolute;top:-7px;width:3px;height:16px;background:var(--ink);
+  transform:translateX(-1.5px)}
+.skala-ax{display:flex;justify-content:space-between;font-family:var(--fm);font-size:.68rem;
+  letter-spacing:.1em;color:var(--muted);margin-top:9px;font-variant-numeric:tabular-nums}
+
+/* D7 punkt 4: EN rad om talet. Rubrik plus mening, utläggningen fälld.
+   Dubbelklass (.metod.hero-metod) med avsikt: den generella .metod-rutan är
+   definierad LÄNGRE NER i stilmallen, och med samma specificitet skulle den
+   vinna och göra folden till en låda med versal brödtext. */
+.metod.hero-metod{max-width:860px;margin-top:18px;background:transparent;border:0;
+  border-radius:0;border-top:1px solid var(--line)}
+.metod.hero-metod summary{padding:14px 0;min-height:0;flex-wrap:wrap;gap:4px 14px;
+  align-items:baseline;text-transform:none;letter-spacing:0;font-size:1rem;
+  font-family:var(--fb);font-weight:400;color:var(--ink-2);transition:color 150ms ease}
+.metod.hero-metod summary:hover{background:transparent;color:var(--ink)}
+.metod.hero-metod .metod-rubrik{font-family:var(--fm);font-size:.7rem;font-weight:600;
+  letter-spacing:.16em;text-transform:uppercase;color:var(--muted);white-space:nowrap;
+  flex:none;transition:color 150ms ease}
+.metod.hero-metod summary:hover .metod-rubrik,
+.metod.hero-metod summary:focus-visible .metod-rubrik{color:var(--ink-2)}
+.metod.hero-metod .metod-kort{flex:1 1 300px;color:var(--ink-2);font-size:.99rem;
+  line-height:1.5;font-variant-numeric:tabular-nums;text-transform:none;letter-spacing:0}
+.metod.hero-metod summary .more{flex:none;margin-left:auto;width:auto;margin-top:0}
+.metod.hero-metod .metod-body{padding-left:0;padding-right:0;padding-bottom:18px}
+
+/* D7 punkt 5: bylinen liten, och skrollinbjudan intill den ── */
+.hero-fot{display:flex;align-items:flex-end;justify-content:space-between;gap:20px 30px;
+  flex-wrap:wrap;margin-top:22px;padding-top:16px;border-top:1px solid var(--line)}
+.hero-fot .byline{margin-top:0;padding-top:0;border-top:0}
+.hero-fot .byline .who{font-size:.92rem}
+.hero-fot .byline .org{font-size:.7rem;margin-top:3px}
+.hero-fot .byline .about{font-size:.88rem;margin-top:5px;max-width:46ch}
+/* skrollinbjudan: en tydlig affordance, inte en dekoration */
+.hero-mer{display:inline-flex;align-items:center;gap:10px;text-decoration:none;
+  font-family:var(--fm);font-size:.7rem;font-weight:600;letter-spacing:.16em;
+  text-transform:uppercase;color:var(--ink-2);white-space:nowrap;padding:8px 0;
+  transition:color 150ms ease}
+.hero-mer:hover,.hero-mer:focus-visible{color:var(--ink)}
+.hero-mer .pil{display:inline-block;width:9px;height:9px;border-right:2px solid currentColor;
+  border-bottom:2px solid currentColor;transform:rotate(45deg) translate(-2px,-2px);
+  flex:none}
+
+/* ── bandet under folden: datum, sammansättning, tolvveckorskurvan ──
+   Skuret ur folden (D7). Ligger direkt under heroen och syns i underkant, vilket
+   i sig är ett skäl att skrolla. Smalare padding än de vanliga banden. */
+.tolv{border-top:1px solid var(--line);background:var(--bg-1)}
+.tolv>.wrap{padding-top:30px;padding-bottom:34px}
+.tolv-topp{display:flex;align-items:baseline;justify-content:space-between;gap:10px 26px;
+  flex-wrap:wrap}
+.tolv-rubrik{font-family:var(--fm);font-size:.7rem;font-weight:600;letter-spacing:.18em;
+  text-transform:uppercase;color:var(--muted)}
+.tolv-meta{font-family:var(--fm);font-size:.7rem;letter-spacing:.12em;text-transform:uppercase;
+  color:var(--muted)}
+.komp{color:var(--ink-2);font-size:1.02rem;max-width:52ch;line-height:1.5;margin-top:14px}
+.kurva{width:100%;margin-top:16px}
+.spark{display:block;width:100%;height:auto}
+.spark-line{fill:none;stroke:var(--ink-2);stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+.spark-noll{stroke:var(--line-2);stroke-width:1;stroke-dasharray:2 7}
+/* gråskala i heroen, samma skäl som D3 */
+.spark-dot{fill:var(--ink)}
+.spark-ax{display:flex;justify-content:space-between;font-family:var(--fm);font-size:.68rem;
+  letter-spacing:.1em;color:var(--muted);margin-top:8px}
+
+/* ── rubriker ── */
+.sec-head{margin-bottom:26px}
+.kicker{font-family:var(--fm);font-size:.7rem;font-weight:600;letter-spacing:.18em;
+  text-transform:uppercase;color:var(--muted);display:block;margin-bottom:12px}
+h2{font-family:var(--fd);font-size:clamp(1.7rem,3.6vw,2.5rem);font-weight:700;
+  letter-spacing:-.02em;line-height:1.14}
+h2.stor{font-size:clamp(1.9rem,4.2vw,2.9rem)}
+.sec-lede{color:var(--ink-2);font-size:1rem;margin-top:14px;max-width:65ch;line-height:1.6}
+.sec-underrubrik{font-size:1.08rem;font-weight:500;color:var(--ink);margin-top:14px;
+  max-width:60ch;line-height:1.55}
+.stamp{display:inline-block;margin-top:16px;font-family:var(--fm);font-size:.7rem;
+  letter-spacing:.1em;text-transform:uppercase;color:var(--muted);
+  border:1px solid var(--line-2);border-radius:999px;padding:5px 13px}
+
+/* ── Veckans tre ── */
+.tre-lista{list-style:none;counter-reset:tre;margin-top:6px}
+.tre-lista li{counter-increment:tre;padding:26px 0;border-top:1px solid var(--line)}
+.tre-lista li:last-child{border-bottom:1px solid var(--line)}
+.tre-lista li::before{content:counter(tre,decimal-leading-zero);font-family:var(--fm);
+  font-size:.7rem;letter-spacing:.14em;color:var(--muted);display:block;margin-bottom:12px}
+.tre-mening{font-family:var(--fd);font-size:1.32rem;line-height:1.45;color:var(--ink);
+  max-width:62ch;letter-spacing:-.005em}
+.tre-fot{display:flex;align-items:center;flex-wrap:wrap;gap:0 10px;margin-top:14px;
+  font-family:var(--fm);font-size:.71rem;letter-spacing:.1em;text-transform:uppercase;
+  color:var(--muted)}
+/* D4: explicit riktning per rad, så mixen syns utan att ordningen bär den */
+.tre-riktning{font-weight:700}
+.tre-riktning.pos{color:var(--pos)} .tre-riktning.neg{color:var(--neg)}
+.tre-riktning.neu{color:var(--neu)}
+.tre-steg{font-weight:700}
+.tre-steg.pos{color:var(--pos)} .tre-steg.neg{color:var(--neg)} .tre-steg.neu{color:var(--neu)}
+
+/* ── avsändarblock (masthead) ── */
+.brand{font-family:var(--fd);font-size:clamp(1.8rem,4vw,2.4rem);font-weight:700;
+  letter-spacing:-.02em;line-height:1.12}
+.tagline{color:var(--ink-2);margin-top:12px;font-size:1.05rem;max-width:56ch;line-height:1.55}
+.byline{margin-top:26px;padding-top:20px;border-top:1px solid var(--line)}
+.byline .who{font-weight:600;font-size:1.02rem;display:block}
+.byline .org{font-family:var(--fm);font-size:.78rem;letter-spacing:.12em;text-transform:uppercase;
+  color:var(--ink-2);display:block;margin-top:6px}
+.byline .about{color:var(--ink-2);font-size:.97rem;margin-top:10px;max-width:60ch}
+.byline .contact{margin-top:12px;font-size:.97rem}
+.byline .contact a{display:inline-block;padding:6px 0;font-weight:500}
+.sourcemix{color:var(--ink-2);font-size:.97rem;margin-top:20px;max-width:62ch}
+.ram{margin-top:18px;font-family:var(--fm);font-size:.73rem;letter-spacing:.1em;
+  text-transform:uppercase;font-weight:600;color:var(--ink-2);border:1px solid var(--line-2);
+  border-radius:999px;padding:7px 15px;display:inline-block}
+.isolink{margin-top:22px;font-size:1rem}
+.isolink a{font-weight:500}
+
+/* utfällbar metod */
+.metod{margin-top:22px;background:var(--bg-2);border:1px solid var(--line);border-radius:4px}
+.metod summary{padding:16px 20px;cursor:pointer;list-style:none;display:flex;align-items:center;
+  gap:10px;min-height:54px;font-family:var(--fm);font-size:.76rem;font-weight:600;
+  letter-spacing:.12em;text-transform:uppercase;color:var(--ink)}
+.metod summary::-webkit-details-marker{display:none}
+.metod summary:hover{background:var(--bg-3)}
+.metod[open] .more::after{content:" ▲"} .metod:not([open]) .more::after{content:" ▼"}
+.metod-body{padding:4px 20px 22px}
+.metod-body p{font-size:.95rem;color:var(--ink-2);margin-bottom:13px;max-width:65ch}
+.metod-body h4{font-family:var(--fm);font-size:.7rem;font-weight:600;letter-spacing:.16em;
+  text-transform:uppercase;color:var(--muted);margin:22px 0 11px}
+.metod-body ul.skala{list-style:none;margin:0 0 14px}
+.metod-body ul.skala li{font-size:.95rem;color:var(--ink-2);padding:5px 0;line-height:1.55}
+.metod-body ul.skala b{display:inline-block;min-width:34px;font-weight:700;font-family:var(--fm)}
+.metod-body ul.skala b.pos{color:var(--pos)} .metod-body ul.skala b.neg{color:var(--neg)}
+.metod-body ul.skala b.neu{color:var(--neu)}
+.omr{margin-bottom:14px}
+.omr h5{font-family:var(--fm);font-size:.78rem;font-weight:600;letter-spacing:.06em}
+.omr p{font-size:.93rem;color:var(--ink-2);margin-top:3px;max-width:65ch}
+
+/* ── signalkort ── */
+/* hårlinjerna sitter på korten, inte på rutnätet — annars lyser tomma celler
+   i sista raden grå när antalet kort inte fyller raden (10 kort / 3 kolumner) */
+.cards{display:grid;grid-template-columns:repeat(auto-fill,minmax(288px,1fr));gap:1px;
+  background:transparent;border:0}
+.card{background:var(--bg-2);padding:24px 22px;box-shadow:0 0 0 1px var(--line)}
+.card.oforandrad{background:var(--bg-1)}
+.card h3{font-family:var(--fm);font-size:.8rem;font-weight:600;letter-spacing:.1em;
+  text-transform:uppercase;line-height:1.4;color:var(--ink)}
+.card .def{font-size:.88rem;color:var(--muted);margin:8px 0 18px;line-height:1.45}
+.card-score{display:flex;align-items:center;gap:14px}
+.card-score .v{font-family:var(--fm);font-size:1.5rem;font-weight:600;min-width:40px;
+  font-variant-numeric:tabular-nums}
+.card-score .v.pos{color:var(--pos)} .card-score .v.neg{color:var(--neg)}
+.card-score .v.neu{color:var(--neu)}
+.bar{flex:1;height:3px;background:var(--line-2);overflow:hidden}
+.bar i{display:block;height:100%}
+.bar i.pos{background:var(--pos)} .bar i.neg{background:var(--neg)} .bar i.neu{background:var(--neu)}
+.card .just{font-size:.96rem;color:var(--ink-2);margin-top:16px;line-height:1.6}
+.card .just.tom{color:var(--muted);font-style:italic}
+.card-status{margin-top:14px}
+.status-ny,.status-oforandrad{display:inline-block;font-family:var(--fm);font-size:.66rem;
+  font-weight:600;letter-spacing:.12em;text-transform:uppercase;padding:4px 9px;
+  border:1px solid var(--line-2);color:var(--ink-2);white-space:nowrap}
+.status-oforandrad{color:var(--muted)}
+
+/* källor bakom poängen */
+details.kallor{margin-top:18px;border-top:1px solid var(--line);padding-top:14px}
+details.kallor summary{cursor:pointer;list-style:none;display:flex;min-height:38px;align-items:center}
+details.kallor summary::-webkit-details-marker{display:none}
+details.kallor .more{margin-left:0}
+details.kallor[open] .more::after{content:" ▲"} details.kallor:not([open]) .more::after{content:" ▼"}
+.more{margin-left:auto;font-family:var(--fm);font-size:.7rem;font-weight:600;letter-spacing:.12em;
+  text-transform:uppercase;color:var(--ink-2);white-space:nowrap}
+.kall-lista{margin-top:12px}
+
+/* källposter */
+.ev{background:var(--bg-3);border-left:2px solid var(--line-2);padding:15px 17px;margin-bottom:9px}
+.ev.positive{border-left-color:var(--pos)}
+.ev.negative{border-left-color:var(--neg)}
+.ev.mixed{border-left-color:var(--neu)}
+.ev-title{font-size:.98rem;font-weight:500;line-height:1.45}
+.ev-title a{text-decoration:none;color:var(--ink);display:inline-block;padding:2px 0}
+.ev-title a:hover{text-decoration:underline;text-decoration-color:var(--ink-2)}
+.ev-meta{font-family:var(--fm);font-size:.68rem;letter-spacing:.06em;color:var(--muted);
+  margin-top:8px;display:flex;align-items:center;flex-wrap:wrap;gap:0 7px}
+.ev-meta .src{color:var(--ink-2)}
+.ev-meta .dot{color:var(--line-2)}
+.ev-sum{font-size:.93rem;color:var(--ink-2);margin-top:10px;line-height:1.6}
+.cc{display:inline-block;font-family:var(--fm);font-size:.64rem;font-weight:600;letter-spacing:.08em;
+  padding:2px 6px;border:1px solid var(--line-2);color:var(--muted);margin-right:7px}
+.src-tag{display:inline-block;font-family:var(--fm);font-size:.64rem;font-weight:600;
+  letter-spacing:.06em;padding:2px 7px;border:1px solid var(--line-2);color:var(--ink-2);
+  white-space:nowrap}
+
+/* ── historik ── */
+.trend-outer{overflow-x:auto;-webkit-overflow-scrolling:touch;padding-bottom:6px}
+.trend{display:flex;align-items:flex-end;gap:6px;min-width:100%}
+.tcol{flex:1;min-width:26px;text-align:center;font-family:var(--fm);font-size:.66rem;
+  letter-spacing:.04em;color:var(--muted)}
+.tval{display:block;margin-bottom:7px;color:var(--ink-2);font-variant-numeric:tabular-nums}
+.tplot{height:96px;display:flex;flex-direction:column;justify-content:center}
+.tup,.tdown{height:48px;display:flex}
+.tup{align-items:flex-end} .tdown{align-items:flex-start}
+.tbar{width:100%}
+.tbar.pos{background:var(--pos)} .tbar.neg{background:var(--neg)} .tbar.neu{background:var(--neu)}
+.tzero{border-top:1px solid var(--line-2)}
+.tlabel{display:block;margin-top:7px}
+.trend-note{color:var(--muted);font-size:.88rem;margin-top:18px}
+
+/* ── ISO ── */
+.iso-head-stor{margin-bottom:22px}
+.iso-row{background:var(--bg-2);border:1px solid var(--line);margin-bottom:10px;overflow:hidden}
+.iso-row summary{padding:17px 20px;cursor:pointer;list-style:none;display:flex;flex-wrap:wrap;
+  align-items:center;gap:7px 16px;min-height:56px}
+.iso-row summary::-webkit-details-marker{display:none}
+.iso-row summary:hover{background:var(--bg-3)}
+.iso-row[open] .more::after{content:" ▲"} .iso-row:not([open]) .more::after{content:" ▼"}
+.iso-head{display:flex;align-items:baseline;flex-wrap:wrap;gap:5px 12px}
+.iso-std{font-family:var(--fm);font-size:.92rem;font-weight:600;letter-spacing:.06em;color:var(--ink)}
+.iso-name{color:var(--muted);font-size:.9rem}
+.iso-stage{font-size:.93rem;font-weight:500;color:var(--ink-2);display:flex;align-items:center;
+  gap:8px;flex-wrap:wrap}
+.iso-body{padding:2px 20px 22px}
+.iso-block{margin-top:18px;padding-top:18px;border-top:1px solid var(--line)}
+.iso-block:first-child{margin-top:0;padding-top:0;border-top:0}
+.iso-block h4{font-family:var(--fm);font-size:.7rem;font-weight:600;letter-spacing:.16em;
+  text-transform:uppercase;color:var(--muted);margin-bottom:11px}
+ul.marked{list-style:none;margin:0;padding:0}
+ul.marked li{font-size:.95rem;color:var(--ink-2);margin-bottom:13px;line-height:1.6}
+ul.marked li .src-tag{margin-left:5px}
+ul.marked li .note{color:var(--muted);font-size:.89rem}
+ul.plain{margin:12px 0 0;padding-left:20px}
+ul.plain li{font-size:.95rem;color:var(--ink-2);margin-bottom:8px;line-height:1.6}
+/* gråskala: en varningsruta är inte en allvarsnivå */
+.caveat{font-size:.93rem;color:var(--ink-2);background:var(--bg-3);
+  border-left:2px solid var(--line-2);padding:12px 15px}
+.iso-src{margin-top:20px;padding-top:14px;border-top:1px solid var(--line);
+  font-family:var(--fm);font-size:.72rem;letter-spacing:.06em;color:var(--muted)}
+.iso-src a{display:inline-block;margin:4px 16px 4px 0;padding:4px 0}
+.iso-stadier{font-size:.95rem;color:var(--ink-2);margin-top:14px;max-width:65ch}
+.iso-kontroll{font-size:.92rem;color:var(--ink-2);margin-top:12px;max-width:65ch;
+  background:var(--bg-3);border-left:2px solid var(--line-2);padding:11px 14px}
+
+/* ── paneler ── */
+.panel{background:var(--bg-2);border:1px solid var(--line);padding:24px 24px}
+.panel p{font-size:.96rem;color:var(--ink-2);margin-bottom:14px;max-width:65ch}
+.panel p:last-child{margin-bottom:0}
+.panel p b{color:var(--ink);font-weight:600}
+.panel.warn{background:var(--bg-2)}
+.panel.markning{margin-bottom:20px}
+.panel.markning h4{font-family:var(--fm);font-size:.7rem;font-weight:600;letter-spacing:.16em;
+  text-transform:uppercase;color:var(--muted);margin-bottom:12px}
+ul.markning-lista{list-style:none;margin:0 0 14px}
+/* gråskala: källmärkning är inte en allvarsnivå */
+ul.markning-lista li{font-size:.94rem;color:var(--ink-2);line-height:1.6;padding:8px 0 8px 16px;
+  border-left:2px solid var(--line-2);margin-bottom:7px}
+.panel.markning .note{font-size:.89rem;color:var(--muted)}
+
+/* ── kontaktformulär ──
+   Inga nya färger och inga nya typsnitt: fälten ligger på --bg-2 med samma
+   ram som .panel, etiketterna använder monospacevokabuläret från .kicker och
+   knappen är den benvita ytan från den aktiva språkknappen. Träffytorna är
+   minst 48 px höga, som .metod summary på mobil. */
+.kform{margin-top:30px}
+.kfalt{margin-bottom:20px}
+.kfalt label{font-family:var(--fm);font-size:.7rem;font-weight:600;letter-spacing:.16em;
+  text-transform:uppercase;color:var(--muted);display:block;margin-bottom:9px}
+.kfalt input,.kfalt textarea{width:100%;font:inherit;font-size:1rem;color:var(--ink);
+  background:var(--bg-2);border:1px solid var(--line-2);border-radius:4px;
+  padding:13px 15px;min-height:50px;line-height:1.55;display:block}
+.kfalt textarea{resize:vertical;min-height:150px}
+.kfalt input:hover,.kfalt textarea:hover{border-color:var(--muted)}
+.kfalt input:focus,.kfalt textarea:focus{outline:2px solid var(--ink-2);outline-offset:2px;
+  border-color:var(--ink-2)}
+.knapp{appearance:none;border:0;cursor:pointer;font:inherit;font-family:var(--fm);
+  font-size:.76rem;font-weight:600;letter-spacing:.14em;text-transform:uppercase;
+  background:var(--ink);color:var(--bg);padding:15px 26px;min-height:52px;border-radius:999px;
+  display:inline-block}
+.knapp:hover{background:var(--ink-2)}
+.kform-not{margin-top:16px;font-size:.89rem;color:var(--muted);max-width:60ch;line-height:1.6}
+/* honeypot: aldrig synlig, aldrig i tabbordningen */
+.kform-honey{position:absolute;left:-9999px;width:1px;height:1px;overflow:hidden}
+
+/* ── fot ── */
+footer{border-top:1px solid var(--line);background:var(--bg-1)}
+footer .wrap{padding-top:40px;padding-bottom:52px}
+footer p{font-family:var(--fm);font-size:.72rem;letter-spacing:.06em;color:var(--muted);
+  margin-bottom:9px;line-height:1.7}
+
+/* ── rörelse (D7c): bara vid inträde. Slutläget är DEFAULT. ──
+   Klassen .anim sätts av en inline-tagg i <head>. Finns ingen JS läggs den
+   aldrig på, och då syns allt direkt, statiskt, i sitt slutläge. Rörelsen är
+   ett tillägg — aldrig en förutsättning för att innehållet ska bli synligt.
+   --d är stegets fördröjning i foldens sekvens (sätts inline, punkt 1→5). */
+html.anim .rise{opacity:0;transform:translateY(10px)}
+html.anim .rise.in{opacity:1;transform:none;
+  transition:opacity 560ms ease var(--d,0ms),
+             transform 560ms cubic-bezier(.2,.7,.2,1) var(--d,0ms)}
+html.anim .spark-line{stroke-dashoffset:var(--len);stroke-dasharray:var(--len)}
+html.anim .spark.in .spark-line{stroke-dashoffset:0;
+  transition:stroke-dashoffset 1500ms cubic-bezier(.25,.65,.25,1)}
+html.anim .spark-dot{opacity:0}
+html.anim .spark.in .spark-dot{opacity:1;transition:opacity 500ms ease 1150ms}
+/* Skrollinbjudans pil nickar tre gånger och lägger sig sedan still. Den säger
+   "det finns mer" utan att bli en blinkande dekoration. */
+html.anim .hero-mer .pil{animation:nick 2.1s ease-in-out 1.6s 3}
+@keyframes nick{
+  0%,100%{transform:rotate(45deg) translate(-2px,-2px)}
+  50%{transform:rotate(45deg) translate(2px,2px)}
+}
+
+/* ── hover och fokus: subtilt och snabbt (150 ms) ── */
+a{transition:color 150ms ease,text-decoration-color 150ms ease}
+.card{transition:background-color 150ms ease}
+.card:hover{background:var(--bg-3)}
+.card.oforandrad:hover{background:var(--bg-2)}
+.tre-lista li{transition:background-color 150ms ease}
+.tre-lista li:hover{background:var(--bg-2)}
+.iso-row summary,.metod summary,details.kallor summary{transition:background-color 150ms ease,color 150ms ease}
+:focus-visible{outline:2px solid var(--ink-2);outline-offset:3px}
+
+@media (prefers-reduced-motion:reduce){
+  html.anim .rise,html.anim .rise.in{opacity:1;transform:none;transition:none}
+  html.anim .spark-line{stroke-dasharray:none;stroke-dashoffset:0}
+  html.anim .spark-dot{opacity:1}
+  html.anim .hero-mer .pil{animation:none;transform:rotate(45deg) translate(-2px,-2px)}
+  *{transition:none !important;animation:none !important}
+}
+
+@media (max-width:720px){
+  body{font-size:16px}
+  :root{--pad:40px;--navh:46px;--peek:44px}
+  .wrap{padding:0 20px}
+  .band>.wrap{padding-top:52px;padding-bottom:52px}
+  /* D7: folden på 390x844. Radhuvud 54 + navrad 46 = 100 px är taget, resten är
+     heroens minus den peek som visar bandet under. Värderaden och talet MÅSTE
+     ligga ovanför skrollgränsen, så allt under punkt 3 hålls kompakt. */
+  .hero{min-height:calc(100svh - 54px - var(--navh) - var(--peek));padding:18px 0 14px}
+  .varde{font-size:1.34rem;line-height:1.3;max-width:none}
+  /* longhand: shorthand skulle nolla .wrap-paddingen i sidled och klistra det
+     stora ordet mot vänsterkanten (felet 16 aug 2026) */
+  .hero-mid{padding-top:18px;padding-bottom:18px}
+  .hero-figs{margin-top:8px}
+  .hero-metod{margin-top:12px}
+  .metod.hero-metod summary{padding-top:12px;padding-bottom:12px;font-size:.95rem;
+    padding-left:0;padding-right:0;min-height:0}
+  .metod.hero-metod .metod-kort{font-size:.93rem;flex:1 1 100%}
+  .metod.hero-metod .metod-body{padding-left:0;padding-right:0}
+  .hero-fot{margin-top:16px;padding-top:13px;gap:14px;
+    align-items:flex-start;flex-direction:column}
+  .hero-fot .byline .about{font-size:.85rem;max-width:none}
+  .hero-mer{padding-top:0;padding-bottom:2px}
+  .tolv>.wrap{padding-top:26px;padding-bottom:30px}
+  .komp{font-size:.98rem;max-width:none;margin-top:12px}
+  /* alla fyra ankare ska rymmas utan att sista klipps av vid 390 px */
+  .pagenav a{font-size:.67rem;letter-spacing:.1em}
+  .pagenav a+a{margin-left:15px}
+  .skala{flex:1 1 100%;max-width:none}
+  .sec-head{margin-bottom:20px}
+  .tre-mening{font-size:1.16rem}
+  .card{padding:20px 18px}
+  .panel,.iso-body,.metod-body{padding-left:17px;padding-right:17px}
+  .iso-row summary,.metod summary{padding:14px 17px;min-height:48px}
+  .ev{padding:14px 15px}
+  .more{margin-left:0;width:100%;margin-top:4px}
+  .iso-stage{width:100%}
+  .trend{min-width:560px}
+  /* kontaktformuläret på 390 px: full bredd, inget som kräver zoom */
+  .kfalt input,.kfalt textarea{font-size:1rem;padding:13px 14px}
+  .knapp{width:100%;text-align:center}
+}
+.tack-wrap{min-height:100svh;display:flex;align-items:center}
+.tack h1{font-family:var(--fd);font-size:clamp(1.9rem,4.2vw,2.9rem);font-weight:700;
+  letter-spacing:-.02em;line-height:1.14;margin-bottom:18px}
+.tack p{color:var(--ink-2);font-size:1.05rem;max-width:60ch;margin-bottom:13px;line-height:1.6}
+.tack .tillbaka{margin-top:26px}
+</style>
+</head>
+<body>
+<div class="topbar">
+  <div class="wrap">
+    <div class="topbar-id"><span class="wordmark">EHS Sentinel</span></div>
+  </div>
+</div>
+<div class="tack-wrap">
+  <div class="wrap smal tack">
+    <span class="kicker">Kontakt / Contact</span>
+    <h1>Tack, meddelandet är skickat.</h1>
+    <p>Erik läser inkommande meddelanden dagligen och svarar till adressen du fyllde i.</p>
+    <p>Thank you — your message has been sent. Erik reads incoming messages daily and replies to the address you entered.</p>
+    <p class="tillbaka"><a href="./">Tillbaka till veckans läge / Back to this week's reading</a></p>
+  </div>
+</div>
+</body>
+</html>
