@@ -1,0 +1,1507 @@
+<!DOCTYPE html>
+<html lang="en" data-lang="en">
+<head>
+    <script defer src="/sdk/banner.js"></script>
+    <script defer src="/sdk/app-error-report.js"></script>
+<link rel="icon" type="image/svg+xml" href="./favicon.svg" />
+    <meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<!-- Relativ bas med avsikt: SAMMA katalog (publik-dist-v2) serveras under mer
+     än en deploy-slug (skarpa ehs-sentinel och förhandsvisningen
+     ehs-sentinel-v2). En absolut bas skulle peka ut EN av dem, och då skulle
+     ankarlänkarna i navigationsraden hoppa till den andra appen i stället för
+     inom sidan. "./" är rätt under båda. Deployverktyget injicerar bara en bas
+     om det inte redan finns en. -->
+<base href="./">
+<title>EHS Sentinel</title>
+<meta name="description" content="Veckans underrättelseläge inom arbetsmiljö, säkerhet och hållbarhet — Sverige och EU. Varje post länkar till originalkällan.">
+<meta property="og:type" content="website">
+<meta property="og:url" content="https://ehssentinel.com/">
+<link rel="canonical" href="https://ehssentinel.com/">
+<meta property="og:title" content="EHS Sentinel">
+<meta property="og:description" content="Veckans underrättelseläge inom arbetsmiljö, säkerhet och hållbarhet — Sverige och EU.">
+<meta property="og:image" content="https://ehssentinel.com/share-card.png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="EHS Sentinel">
+<meta name="twitter:description" content="Veckans underrättelseläge inom arbetsmiljö, säkerhet och hållbarhet — Sverige och EU.">
+<meta name="twitter:image" content="https://ehssentinel.com/share-card.png">
+<script>document.documentElement.className+=' anim';</script>
+<style>
+:root{
+  /* gråskala — allt utom de tre allvarsnivåerna */
+  --bg:#0b0c0e; --bg-1:#101216; --bg-2:#15181d; --bg-3:#1b1f25;
+  --ink:#f3f4f6; --ink-2:#b3b8c2; --muted:#767c87;
+  --line:#23272e; --line-2:#2d323a;
+  /* EXAKT tre färger = de tre allvarsnivåerna. Används ingen annanstans. */
+  --neg:#e2565a; --neu:#cf9a3a; --pos:#43a37d;
+  --fd:Georgia,"Iowan Old Style","Times New Roman",serif;
+  --fm:ui-monospace,SFMono-Regular,"SF Mono",Menlo,Consolas,"Liberation Mono",monospace;
+  --fb:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+  --pad:56px; /* .wrap-padding x2 — heroordets storlek räknas mot den */
+  --navh:50px; /* navigationsradens höjd — ankarhoppen räknas mot den */
+  --peek:52px; /* så mycket av bandet under heroen som ska titta fram (D7) */
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html{-webkit-text-size-adjust:100%;background:var(--bg)}
+/* overflow-x:clip, INTE hidden: hidden gör body till scrollport och slår ut
+   position:sticky på navigationsraden (D1c). clip klipper utan att scrolla. */
+body{font-family:var(--fb);background:var(--bg);color:var(--ink);font-size:16.5px;
+  line-height:1.6;-webkit-font-smoothing:antialiased;overflow-x:clip}
+img{max-width:100%}
+a{color:var(--ink);text-decoration:underline;text-decoration-color:var(--line-2);
+  text-underline-offset:3px}
+a:hover{text-decoration-color:var(--ink-2)}
+
+/* språkväxel: engelska är standard, båda språken ligger i sidan */
+html[data-lang="en"] .l-sv{display:none}
+html[data-lang="sv"] .l-en{display:none}
+
+/* ── rytm: bred (1180) → smal (660) → bred. Aldrig samma bredd två i rad ── */
+.wrap{width:100%;max-width:1180px;margin:0 auto;padding:0 28px}
+.wrap.smal{max-width:660px}
+.band{border-top:1px solid var(--line)}
+.band-a{background:var(--bg)}
+.band-b{background:var(--bg-1)}
+.band>.wrap{padding-top:74px;padding-bottom:74px}
+
+/* ── D7 punkt 1: radhuvudet. Litet, diskret: namn · vecka+år · språk ── */
+.topbar{height:54px;display:flex;align-items:center;position:relative;z-index:3}
+.topbar .wrap{display:flex;align-items:center;justify-content:space-between;gap:16px}
+.topbar-id{display:flex;align-items:baseline;gap:10px;min-width:0}
+.wordmark{font-family:var(--fm);font-size:.74rem;font-weight:600;letter-spacing:.2em;
+  text-transform:uppercase;color:var(--ink-2);white-space:nowrap}
+.topsep{color:var(--line-2)}
+.topweek{font-family:var(--fm);font-size:.72rem;font-weight:600;letter-spacing:.14em;
+  text-transform:uppercase;color:var(--muted);white-space:nowrap;
+  font-variant-numeric:tabular-nums}
+.lang{display:inline-flex;border:1px solid var(--line-2);border-radius:999px;overflow:hidden}
+.lang button{appearance:none;border:0;background:transparent;cursor:pointer;font:inherit;
+  font-family:var(--fm);font-size:.7rem;font-weight:600;color:var(--muted);padding:6px 13px;
+  min-height:34px;letter-spacing:.12em}
+.lang button+button{border-left:1px solid var(--line-2)}
+html[data-lang="sv"] .lang button[data-set="sv"],
+html[data-lang="en"] .lang button[data-set="en"]{background:var(--ink);color:var(--bg)}
+
+/* ── D7b: navigationsraden är visuellt UNDERORDNAD värderaden ──
+   Tunn, monospace, låg kontrast. Ligger som direkt barn till <body> så att
+   sticky gäller HELA sidan och inte bara första skärmen — sticky bär bara inom
+   sitt containing block. */
+.pagenav{position:sticky;top:0;z-index:5;background:var(--bg);
+  border-top:1px solid var(--line);border-bottom:1px solid var(--line)}
+.pagenav .wrap{display:flex;align-items:center;overflow-x:auto;
+  -webkit-overflow-scrolling:touch;scrollbar-width:none}
+.pagenav .wrap::-webkit-scrollbar{display:none}
+.pagenav a{font-family:var(--fm);font-size:.7rem;font-weight:600;letter-spacing:.16em;
+  text-transform:uppercase;color:var(--muted);text-decoration:none;white-space:nowrap;
+  min-height:var(--navh);display:inline-flex;align-items:center;
+  transition:color 150ms ease}
+.pagenav a+a{margin-left:26px}
+.pagenav a:hover,.pagenav a:focus-visible{color:var(--ink)}
+/* ankarhopp får inte landa under den fasta raden */
+section[id],footer[id]{scroll-margin-top:calc(var(--navh) + 20px)}
+
+/* ── D7: FOLDEN. Fem saker, inget mer. ───────────────────────────────
+   Heroen är hela folden under radhuvudet och navraden. min-height räknas mot
+   svh (mobilens synliga höjd) minus de två raderna MINUS --peek, så bandet
+   under heroen alltid tittar fram i underkant. Det är den detaljen som gör att
+   folden bjuder in till skroll i stället för att se ut som hela sidan.
+   Innehållet får växa förbi min-height — då skjuts bandet nedåt, aldrig
+   innehållet upp. */
+.hero{min-height:calc(100svh - 54px - var(--navh) - var(--peek));
+  display:flex;flex-direction:column;
+  padding:26px 0 18px;overflow:hidden}
+.hero .wrap{width:100%}
+.hero-inner{display:flex;flex-direction:column;flex:1;gap:0}
+
+/* D7 punkt 2: VÄRDERADEN. Stor, serif, ljus. Sidans första och tyngsta rad. */
+.varde{font-family:var(--fd);font-size:clamp(1.45rem,3.1vw,2.35rem);line-height:1.28;
+  letter-spacing:-.015em;max-width:30ch;color:var(--ink)}
+.varde-2{color:var(--ink-2)}
+
+/* D7 punkt 3: regimetiketten och talet mot skalan. Signaturmomentet.
+   margin:auto 0 delar den fria höjden LIKA mellan luften över etiketten och
+   luften under metodraden — då står värderaden i överkant, läget i mitten och
+   identiteten i underkant, oavsett skärmhöjd. */
+.hero-mid{margin:auto 0;padding-top:24px;padding-bottom:24px}
+/* Teckenstorleken räknas ur ordets uppmätta bredd (--em) och spaltens bredd,
+   så ordet alltid fyller spalten utan att spräcka den.
+   D3: benvit, ALDRIG larmfärg. Etiketten är en läsning av läget, inte en
+   larmnivå — rött/gult/grönt tillhör de enskilda signalområdena. */
+.hero-word{font-family:var(--fd);font-weight:700;text-transform:uppercase;
+  font-size:min(7.4rem, calc((min(1180px, 100vw) - var(--pad)) * 0.97 / var(--em)));
+  line-height:1.02;letter-spacing:-.025em;display:block;padding-bottom:.06em;
+  color:var(--ink)}
+.hero-figs{display:flex;align-items:flex-end;flex-wrap:wrap;gap:14px 30px;margin-top:10px}
+/* D3: talet i monospace, gråskala, intill den synliga skalan */
+.hero-num{font-family:var(--fm);font-weight:600;font-size:clamp(2.4rem,7.5vw,4.4rem);
+  line-height:1;letter-spacing:-.04em;font-variant-numeric:tabular-nums;color:var(--ink)}
+/* ── D1d: synlig skala −10..+10, så talet läses som en koordinat ── */
+.skala{flex:1 1 220px;max-width:400px;padding-bottom:9px}
+.skala-spar{position:relative;height:2px;background:var(--line-2)}
+.skala-mitt{position:absolute;left:50%;top:-5px;width:1px;height:12px;background:var(--line-2)}
+/* left sätts inline till markörens SLUTLÄGE. Rörelsen läggs på av JS ovanpå
+   det, aldrig som utgångsläge — utan JS står markören redan rätt. */
+.skala-markor{position:absolute;top:-7px;width:3px;height:16px;background:var(--ink);
+  transform:translateX(-1.5px)}
+.skala-ax{display:flex;justify-content:space-between;font-family:var(--fm);font-size:.68rem;
+  letter-spacing:.1em;color:var(--muted);margin-top:9px;font-variant-numeric:tabular-nums}
+
+/* D7 punkt 4: EN rad om talet. Rubrik plus mening, utläggningen fälld.
+   Dubbelklass (.metod.hero-metod) med avsikt: den generella .metod-rutan är
+   definierad LÄNGRE NER i stilmallen, och med samma specificitet skulle den
+   vinna och göra folden till en låda med versal brödtext. */
+.metod.hero-metod{max-width:860px;margin-top:18px;background:transparent;border:0;
+  border-radius:0;border-top:1px solid var(--line)}
+.metod.hero-metod summary{padding:14px 0;min-height:0;flex-wrap:wrap;gap:4px 14px;
+  align-items:baseline;text-transform:none;letter-spacing:0;font-size:1rem;
+  font-family:var(--fb);font-weight:400;color:var(--ink-2);transition:color 150ms ease}
+.metod.hero-metod summary:hover{background:transparent;color:var(--ink)}
+.metod.hero-metod .metod-rubrik{font-family:var(--fm);font-size:.7rem;font-weight:600;
+  letter-spacing:.16em;text-transform:uppercase;color:var(--muted);white-space:nowrap;
+  flex:none;transition:color 150ms ease}
+.metod.hero-metod summary:hover .metod-rubrik,
+.metod.hero-metod summary:focus-visible .metod-rubrik{color:var(--ink-2)}
+.metod.hero-metod .metod-kort{flex:1 1 300px;color:var(--ink-2);font-size:.99rem;
+  line-height:1.5;font-variant-numeric:tabular-nums;text-transform:none;letter-spacing:0}
+.metod.hero-metod summary .more{flex:none;margin-left:auto;width:auto;margin-top:0}
+.metod.hero-metod .metod-body{padding-left:0;padding-right:0;padding-bottom:18px}
+
+/* D7 punkt 5: bylinen liten, och skrollinbjudan intill den ── */
+.hero-fot{display:flex;align-items:flex-end;justify-content:space-between;gap:20px 30px;
+  flex-wrap:wrap;margin-top:22px;padding-top:16px;border-top:1px solid var(--line)}
+.hero-fot .byline{margin-top:0;padding-top:0;border-top:0}
+.hero-fot .byline .who{font-size:.92rem}
+.hero-fot .byline .org{font-size:.7rem;margin-top:3px}
+.hero-fot .byline .about{font-size:.88rem;margin-top:5px;max-width:46ch}
+/* skrollinbjudan: en tydlig affordance, inte en dekoration */
+.hero-mer{display:inline-flex;align-items:center;gap:10px;text-decoration:none;
+  font-family:var(--fm);font-size:.7rem;font-weight:600;letter-spacing:.16em;
+  text-transform:uppercase;color:var(--ink-2);white-space:nowrap;padding:8px 0;
+  transition:color 150ms ease}
+.hero-mer:hover,.hero-mer:focus-visible{color:var(--ink)}
+.hero-mer .pil{display:inline-block;width:9px;height:9px;border-right:2px solid currentColor;
+  border-bottom:2px solid currentColor;transform:rotate(45deg) translate(-2px,-2px);
+  flex:none}
+
+/* ── bandet under folden: datum, sammansättning, tolvveckorskurvan ──
+   Skuret ur folden (D7). Ligger direkt under heroen och syns i underkant, vilket
+   i sig är ett skäl att skrolla. Smalare padding än de vanliga banden. */
+.tolv{border-top:1px solid var(--line);background:var(--bg-1)}
+.tolv>.wrap{padding-top:30px;padding-bottom:34px}
+.tolv-topp{display:flex;align-items:baseline;justify-content:space-between;gap:10px 26px;
+  flex-wrap:wrap}
+.tolv-rubrik{font-family:var(--fm);font-size:.7rem;font-weight:600;letter-spacing:.18em;
+  text-transform:uppercase;color:var(--muted)}
+.tolv-meta{font-family:var(--fm);font-size:.7rem;letter-spacing:.12em;text-transform:uppercase;
+  color:var(--muted)}
+.komp{color:var(--ink-2);font-size:1.02rem;max-width:52ch;line-height:1.5;margin-top:14px}
+.kurva{width:100%;margin-top:16px}
+.spark{display:block;width:100%;height:auto}
+.spark-line{fill:none;stroke:var(--ink-2);stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+.spark-noll{stroke:var(--line-2);stroke-width:1;stroke-dasharray:2 7}
+/* gråskala i heroen, samma skäl som D3 */
+.spark-dot{fill:var(--ink)}
+.spark-ax{display:flex;justify-content:space-between;font-family:var(--fm);font-size:.68rem;
+  letter-spacing:.1em;color:var(--muted);margin-top:8px}
+
+/* ── rubriker ── */
+.sec-head{margin-bottom:26px}
+.kicker{font-family:var(--fm);font-size:.7rem;font-weight:600;letter-spacing:.18em;
+  text-transform:uppercase;color:var(--muted);display:block;margin-bottom:12px}
+h2{font-family:var(--fd);font-size:clamp(1.7rem,3.6vw,2.5rem);font-weight:700;
+  letter-spacing:-.02em;line-height:1.14}
+h2.stor{font-size:clamp(1.9rem,4.2vw,2.9rem)}
+.sec-lede{color:var(--ink-2);font-size:1rem;margin-top:14px;max-width:65ch;line-height:1.6}
+.sec-underrubrik{font-size:1.08rem;font-weight:500;color:var(--ink);margin-top:14px;
+  max-width:60ch;line-height:1.55}
+.stamp{display:inline-block;margin-top:16px;font-family:var(--fm);font-size:.7rem;
+  letter-spacing:.1em;text-transform:uppercase;color:var(--muted);
+  border:1px solid var(--line-2);border-radius:999px;padding:5px 13px}
+
+/* ── Veckans tre ── */
+.tre-lista{list-style:none;counter-reset:tre;margin-top:6px}
+.tre-lista li{counter-increment:tre;padding:26px 0;border-top:1px solid var(--line)}
+.tre-lista li:last-child{border-bottom:1px solid var(--line)}
+.tre-lista li::before{content:counter(tre,decimal-leading-zero);font-family:var(--fm);
+  font-size:.7rem;letter-spacing:.14em;color:var(--muted);display:block;margin-bottom:12px}
+.tre-mening{font-family:var(--fd);font-size:1.32rem;line-height:1.45;color:var(--ink);
+  max-width:62ch;letter-spacing:-.005em}
+.tre-fot{display:flex;align-items:center;flex-wrap:wrap;gap:0 10px;margin-top:14px;
+  font-family:var(--fm);font-size:.71rem;letter-spacing:.1em;text-transform:uppercase;
+  color:var(--muted)}
+/* D4: explicit riktning per rad, så mixen syns utan att ordningen bär den */
+.tre-riktning{font-weight:700}
+.tre-riktning.pos{color:var(--pos)} .tre-riktning.neg{color:var(--neg)}
+.tre-riktning.neu{color:var(--neu)}
+.tre-steg{font-weight:700}
+.tre-steg.pos{color:var(--pos)} .tre-steg.neg{color:var(--neg)} .tre-steg.neu{color:var(--neu)}
+
+/* ── avsändarblock (masthead) ── */
+.brand{font-family:var(--fd);font-size:clamp(1.8rem,4vw,2.4rem);font-weight:700;
+  letter-spacing:-.02em;line-height:1.12}
+.tagline{color:var(--ink-2);margin-top:12px;font-size:1.05rem;max-width:56ch;line-height:1.55}
+.byline{margin-top:26px;padding-top:20px;border-top:1px solid var(--line)}
+.byline .who{font-weight:600;font-size:1.02rem;display:block}
+.byline .org{font-family:var(--fm);font-size:.78rem;letter-spacing:.12em;text-transform:uppercase;
+  color:var(--ink-2);display:block;margin-top:6px}
+.byline .about{color:var(--ink-2);font-size:.97rem;margin-top:10px;max-width:60ch}
+.byline .contact{margin-top:12px;font-size:.97rem}
+.byline .contact a{display:inline-block;padding:6px 0;font-weight:500}
+.sourcemix{color:var(--ink-2);font-size:.97rem;margin-top:20px;max-width:62ch}
+.ram{margin-top:18px;font-family:var(--fm);font-size:.73rem;letter-spacing:.1em;
+  text-transform:uppercase;font-weight:600;color:var(--ink-2);border:1px solid var(--line-2);
+  border-radius:999px;padding:7px 15px;display:inline-block}
+.isolink{margin-top:22px;font-size:1rem}
+.isolink a{font-weight:500}
+
+/* utfällbar metod */
+.metod{margin-top:22px;background:var(--bg-2);border:1px solid var(--line);border-radius:4px}
+.metod summary{padding:16px 20px;cursor:pointer;list-style:none;display:flex;align-items:center;
+  gap:10px;min-height:54px;font-family:var(--fm);font-size:.76rem;font-weight:600;
+  letter-spacing:.12em;text-transform:uppercase;color:var(--ink)}
+.metod summary::-webkit-details-marker{display:none}
+.metod summary:hover{background:var(--bg-3)}
+.metod[open] .more::after{content:" ▲"} .metod:not([open]) .more::after{content:" ▼"}
+.metod-body{padding:4px 20px 22px}
+.metod-body p{font-size:.95rem;color:var(--ink-2);margin-bottom:13px;max-width:65ch}
+.metod-body h4{font-family:var(--fm);font-size:.7rem;font-weight:600;letter-spacing:.16em;
+  text-transform:uppercase;color:var(--muted);margin:22px 0 11px}
+.metod-body ul.skala{list-style:none;margin:0 0 14px}
+.metod-body ul.skala li{font-size:.95rem;color:var(--ink-2);padding:5px 0;line-height:1.55}
+.metod-body ul.skala b{display:inline-block;min-width:34px;font-weight:700;font-family:var(--fm)}
+.metod-body ul.skala b.pos{color:var(--pos)} .metod-body ul.skala b.neg{color:var(--neg)}
+.metod-body ul.skala b.neu{color:var(--neu)}
+.omr{margin-bottom:14px}
+.omr h5{font-family:var(--fm);font-size:.78rem;font-weight:600;letter-spacing:.06em}
+.omr p{font-size:.93rem;color:var(--ink-2);margin-top:3px;max-width:65ch}
+
+/* ── signalkort ── */
+/* hårlinjerna sitter på korten, inte på rutnätet — annars lyser tomma celler
+   i sista raden grå när antalet kort inte fyller raden (10 kort / 3 kolumner) */
+.cards{display:grid;grid-template-columns:repeat(auto-fill,minmax(288px,1fr));gap:1px;
+  background:transparent;border:0}
+.card{background:var(--bg-2);padding:24px 22px;box-shadow:0 0 0 1px var(--line)}
+.card.oforandrad{background:var(--bg-1)}
+.card h3{font-family:var(--fm);font-size:.8rem;font-weight:600;letter-spacing:.1em;
+  text-transform:uppercase;line-height:1.4;color:var(--ink)}
+.card .def{font-size:.88rem;color:var(--muted);margin:8px 0 18px;line-height:1.45}
+.card-score{display:flex;align-items:center;gap:14px}
+.card-score .v{font-family:var(--fm);font-size:1.5rem;font-weight:600;min-width:40px;
+  font-variant-numeric:tabular-nums}
+.card-score .v.pos{color:var(--pos)} .card-score .v.neg{color:var(--neg)}
+.card-score .v.neu{color:var(--neu)}
+.bar{flex:1;height:3px;background:var(--line-2);overflow:hidden}
+.bar i{display:block;height:100%}
+.bar i.pos{background:var(--pos)} .bar i.neg{background:var(--neg)} .bar i.neu{background:var(--neu)}
+.card .just{font-size:.96rem;color:var(--ink-2);margin-top:16px;line-height:1.6}
+.card .just.tom{color:var(--muted);font-style:italic}
+.card-status{margin-top:14px}
+.status-ny,.status-oforandrad{display:inline-block;font-family:var(--fm);font-size:.66rem;
+  font-weight:600;letter-spacing:.12em;text-transform:uppercase;padding:4px 9px;
+  border:1px solid var(--line-2);color:var(--ink-2);white-space:nowrap}
+.status-oforandrad{color:var(--muted)}
+
+/* källor bakom poängen */
+details.kallor{margin-top:18px;border-top:1px solid var(--line);padding-top:14px}
+details.kallor summary{cursor:pointer;list-style:none;display:flex;min-height:38px;align-items:center}
+details.kallor summary::-webkit-details-marker{display:none}
+details.kallor .more{margin-left:0}
+details.kallor[open] .more::after{content:" ▲"} details.kallor:not([open]) .more::after{content:" ▼"}
+.more{margin-left:auto;font-family:var(--fm);font-size:.7rem;font-weight:600;letter-spacing:.12em;
+  text-transform:uppercase;color:var(--ink-2);white-space:nowrap}
+.kall-lista{margin-top:12px}
+
+/* källposter */
+.ev{background:var(--bg-3);border-left:2px solid var(--line-2);padding:15px 17px;margin-bottom:9px}
+.ev.positive{border-left-color:var(--pos)}
+.ev.negative{border-left-color:var(--neg)}
+.ev.mixed{border-left-color:var(--neu)}
+.ev-title{font-size:.98rem;font-weight:500;line-height:1.45}
+.ev-title a{text-decoration:none;color:var(--ink);display:inline-block;padding:2px 0}
+.ev-title a:hover{text-decoration:underline;text-decoration-color:var(--ink-2)}
+.ev-meta{font-family:var(--fm);font-size:.68rem;letter-spacing:.06em;color:var(--muted);
+  margin-top:8px;display:flex;align-items:center;flex-wrap:wrap;gap:0 7px}
+.ev-meta .src{color:var(--ink-2)}
+.ev-meta .dot{color:var(--line-2)}
+.ev-sum{font-size:.93rem;color:var(--ink-2);margin-top:10px;line-height:1.6}
+.cc{display:inline-block;font-family:var(--fm);font-size:.64rem;font-weight:600;letter-spacing:.08em;
+  padding:2px 6px;border:1px solid var(--line-2);color:var(--muted);margin-right:7px}
+.src-tag{display:inline-block;font-family:var(--fm);font-size:.64rem;font-weight:600;
+  letter-spacing:.06em;padding:2px 7px;border:1px solid var(--line-2);color:var(--ink-2);
+  white-space:nowrap}
+
+/* ── historik ── */
+.trend-outer{overflow-x:auto;-webkit-overflow-scrolling:touch;padding-bottom:6px}
+.trend{display:flex;align-items:flex-end;gap:6px;min-width:100%}
+.tcol{flex:1;min-width:26px;text-align:center;font-family:var(--fm);font-size:.66rem;
+  letter-spacing:.04em;color:var(--muted)}
+.tval{display:block;margin-bottom:7px;color:var(--ink-2);font-variant-numeric:tabular-nums}
+.tplot{height:96px;display:flex;flex-direction:column;justify-content:center}
+.tup,.tdown{height:48px;display:flex}
+.tup{align-items:flex-end} .tdown{align-items:flex-start}
+.tbar{width:100%}
+.tbar.pos{background:var(--pos)} .tbar.neg{background:var(--neg)} .tbar.neu{background:var(--neu)}
+.tzero{border-top:1px solid var(--line-2)}
+.tlabel{display:block;margin-top:7px}
+.trend-note{color:var(--muted);font-size:.88rem;margin-top:18px}
+
+/* ── ISO ── */
+.iso-head-stor{margin-bottom:22px}
+.iso-row{background:var(--bg-2);border:1px solid var(--line);margin-bottom:10px;overflow:hidden}
+.iso-row summary{padding:17px 20px;cursor:pointer;list-style:none;display:flex;flex-wrap:wrap;
+  align-items:center;gap:7px 16px;min-height:56px}
+.iso-row summary::-webkit-details-marker{display:none}
+.iso-row summary:hover{background:var(--bg-3)}
+.iso-row[open] .more::after{content:" ▲"} .iso-row:not([open]) .more::after{content:" ▼"}
+.iso-head{display:flex;align-items:baseline;flex-wrap:wrap;gap:5px 12px}
+.iso-std{font-family:var(--fm);font-size:.92rem;font-weight:600;letter-spacing:.06em;color:var(--ink)}
+.iso-name{color:var(--muted);font-size:.9rem}
+.iso-stage{font-size:.93rem;font-weight:500;color:var(--ink-2);display:flex;align-items:center;
+  gap:8px;flex-wrap:wrap}
+.iso-body{padding:2px 20px 22px}
+.iso-block{margin-top:18px;padding-top:18px;border-top:1px solid var(--line)}
+.iso-block:first-child{margin-top:0;padding-top:0;border-top:0}
+.iso-block h4{font-family:var(--fm);font-size:.7rem;font-weight:600;letter-spacing:.16em;
+  text-transform:uppercase;color:var(--muted);margin-bottom:11px}
+ul.marked{list-style:none;margin:0;padding:0}
+ul.marked li{font-size:.95rem;color:var(--ink-2);margin-bottom:13px;line-height:1.6}
+ul.marked li .src-tag{margin-left:5px}
+ul.marked li .note{color:var(--muted);font-size:.89rem}
+ul.plain{margin:12px 0 0;padding-left:20px}
+ul.plain li{font-size:.95rem;color:var(--ink-2);margin-bottom:8px;line-height:1.6}
+/* gråskala: en varningsruta är inte en allvarsnivå */
+.caveat{font-size:.93rem;color:var(--ink-2);background:var(--bg-3);
+  border-left:2px solid var(--line-2);padding:12px 15px}
+.iso-src{margin-top:20px;padding-top:14px;border-top:1px solid var(--line);
+  font-family:var(--fm);font-size:.72rem;letter-spacing:.06em;color:var(--muted)}
+.iso-src a{display:inline-block;margin:4px 16px 4px 0;padding:4px 0}
+.iso-stadier{font-size:.95rem;color:var(--ink-2);margin-top:14px;max-width:65ch}
+.iso-kontroll{font-size:.92rem;color:var(--ink-2);margin-top:12px;max-width:65ch;
+  background:var(--bg-3);border-left:2px solid var(--line-2);padding:11px 14px}
+
+/* ── paneler ── */
+.panel{background:var(--bg-2);border:1px solid var(--line);padding:24px 24px}
+.panel p{font-size:.96rem;color:var(--ink-2);margin-bottom:14px;max-width:65ch}
+.panel p:last-child{margin-bottom:0}
+.panel p b{color:var(--ink);font-weight:600}
+.panel.warn{background:var(--bg-2)}
+.panel.markning{margin-bottom:20px}
+.panel.markning h4{font-family:var(--fm);font-size:.7rem;font-weight:600;letter-spacing:.16em;
+  text-transform:uppercase;color:var(--muted);margin-bottom:12px}
+ul.markning-lista{list-style:none;margin:0 0 14px}
+/* gråskala: källmärkning är inte en allvarsnivå */
+ul.markning-lista li{font-size:.94rem;color:var(--ink-2);line-height:1.6;padding:8px 0 8px 16px;
+  border-left:2px solid var(--line-2);margin-bottom:7px}
+.panel.markning .note{font-size:.89rem;color:var(--muted)}
+
+/* ── fot ── */
+footer{border-top:1px solid var(--line);background:var(--bg-1)}
+footer .wrap{padding-top:40px;padding-bottom:52px}
+footer p{font-family:var(--fm);font-size:.72rem;letter-spacing:.06em;color:var(--muted);
+  margin-bottom:9px;line-height:1.7}
+
+/* ── rörelse (D7c): bara vid inträde. Slutläget är DEFAULT. ──
+   Klassen .anim sätts av en inline-tagg i <head>. Finns ingen JS läggs den
+   aldrig på, och då syns allt direkt, statiskt, i sitt slutläge. Rörelsen är
+   ett tillägg — aldrig en förutsättning för att innehållet ska bli synligt.
+   --d är stegets fördröjning i foldens sekvens (sätts inline, punkt 1→5). */
+html.anim .rise{opacity:0;transform:translateY(10px)}
+html.anim .rise.in{opacity:1;transform:none;
+  transition:opacity 560ms ease var(--d,0ms),
+             transform 560ms cubic-bezier(.2,.7,.2,1) var(--d,0ms)}
+html.anim .spark-line{stroke-dashoffset:var(--len);stroke-dasharray:var(--len)}
+html.anim .spark.in .spark-line{stroke-dashoffset:0;
+  transition:stroke-dashoffset 1500ms cubic-bezier(.25,.65,.25,1)}
+html.anim .spark-dot{opacity:0}
+html.anim .spark.in .spark-dot{opacity:1;transition:opacity 500ms ease 1150ms}
+/* Skrollinbjudans pil nickar tre gånger och lägger sig sedan still. Den säger
+   "det finns mer" utan att bli en blinkande dekoration. */
+html.anim .hero-mer .pil{animation:nick 2.1s ease-in-out 1.6s 3}
+@keyframes nick{
+  0%,100%{transform:rotate(45deg) translate(-2px,-2px)}
+  50%{transform:rotate(45deg) translate(2px,2px)}
+}
+
+/* ── hover och fokus: subtilt och snabbt (150 ms) ── */
+a{transition:color 150ms ease,text-decoration-color 150ms ease}
+.card{transition:background-color 150ms ease}
+.card:hover{background:var(--bg-3)}
+.card.oforandrad:hover{background:var(--bg-2)}
+.tre-lista li{transition:background-color 150ms ease}
+.tre-lista li:hover{background:var(--bg-2)}
+.iso-row summary,.metod summary,details.kallor summary{transition:background-color 150ms ease,color 150ms ease}
+:focus-visible{outline:2px solid var(--ink-2);outline-offset:3px}
+
+@media (prefers-reduced-motion:reduce){
+  html.anim .rise,html.anim .rise.in{opacity:1;transform:none;transition:none}
+  html.anim .spark-line{stroke-dasharray:none;stroke-dashoffset:0}
+  html.anim .spark-dot{opacity:1}
+  html.anim .hero-mer .pil{animation:none;transform:rotate(45deg) translate(-2px,-2px)}
+  *{transition:none !important;animation:none !important}
+}
+
+@media (max-width:720px){
+  body{font-size:16px}
+  :root{--pad:40px;--navh:46px;--peek:44px}
+  .wrap{padding:0 20px}
+  .band>.wrap{padding-top:52px;padding-bottom:52px}
+  /* D7: folden på 390x844. Radhuvud 54 + navrad 46 = 100 px är taget, resten är
+     heroens minus den peek som visar bandet under. Värderaden och talet MÅSTE
+     ligga ovanför skrollgränsen, så allt under punkt 3 hålls kompakt. */
+  .hero{min-height:calc(100svh - 54px - var(--navh) - var(--peek));padding:18px 0 14px}
+  .varde{font-size:1.34rem;line-height:1.3;max-width:none}
+  /* longhand: shorthand skulle nolla .wrap-paddingen i sidled och klistra det
+     stora ordet mot vänsterkanten (felet 16 aug 2026) */
+  .hero-mid{padding-top:18px;padding-bottom:18px}
+  .hero-figs{margin-top:8px}
+  .hero-metod{margin-top:12px}
+  .metod.hero-metod summary{padding-top:12px;padding-bottom:12px;font-size:.95rem;
+    padding-left:0;padding-right:0;min-height:0}
+  .metod.hero-metod .metod-kort{font-size:.93rem;flex:1 1 100%}
+  .metod.hero-metod .metod-body{padding-left:0;padding-right:0}
+  .hero-fot{margin-top:16px;padding-top:13px;gap:14px;
+    align-items:flex-start;flex-direction:column}
+  .hero-fot .byline .about{font-size:.85rem;max-width:none}
+  .hero-mer{padding-top:0;padding-bottom:2px}
+  .tolv>.wrap{padding-top:26px;padding-bottom:30px}
+  .komp{font-size:.98rem;max-width:none;margin-top:12px}
+  /* alla fyra ankare ska rymmas utan att sista klipps av vid 390 px */
+  .pagenav a{font-size:.67rem;letter-spacing:.1em}
+  .pagenav a+a{margin-left:15px}
+  .skala{flex:1 1 100%;max-width:none}
+  .sec-head{margin-bottom:20px}
+  .tre-mening{font-size:1.16rem}
+  .card{padding:20px 18px}
+  .panel,.iso-body,.metod-body{padding-left:17px;padding-right:17px}
+  .iso-row summary,.metod summary{padding:14px 17px;min-height:48px}
+  .ev{padding:14px 15px}
+  .more{margin-left:0;width:100%;margin-top:4px}
+  .iso-stage{width:100%}
+  .trend{min-width:560px}
+}
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <div class="wrap">
+    <span class="topbar-id rise" style="--d:0ms">
+      <span class="wordmark">EHS Sentinel</span>
+      <span class="topsep" aria-hidden="true">·</span>
+      <span class="topweek"><span class="l-sv">V. 33 2026</span><span class="l-en">W33 2026</span></span>
+    </span>
+    <div class="lang" role="group" aria-label="Language">
+      <button type="button" data-set="sv">SV</button>
+      <button type="button" data-set="en">EN</button>
+    </div>
+  </div>
+</div>
+
+<nav class="pagenav" aria-label="Innehåll">
+    <div class="wrap">
+      <a href="#veckans-tre"><span class="l-sv">Veckans tre</span><span class="l-en">This week's three</span></a>
+      <a href="#omraden"><span class="l-sv">Områden</span><span class="l-en">Areas</span></a>
+      <a href="#iso"><span class="l-sv">ISO och standarder</span><span class="l-en">ISO and standards</span></a>
+      <a href="#om"><span class="l-sv">Om</span><span class="l-en">About</span></a>
+    </div>
+  </nav>
+
+  <section class="hero" aria-label="Veckans läge">
+    <div class="wrap hero-inner">
+      <p class="varde rise" style="--d:200ms"><span class="l-sv"><span class="varde-1">Veckans EHS-läge i Sverige och EU, läst på två minuter.</span> <span class="varde-2">Alla källor, varje måndag, fritt.</span></span><span class="l-en"><span class="varde-1">This week's EHS position in Sweden and the EU, read in two minutes.</span> <span class="varde-2">All sources, every Monday, free.</span></span></p>
+      <div class="hero-mid">
+        <span class="hero-word rise l-sv" style="--d:400ms;--em:8.2322">Regelfriktion</span><span class="hero-word rise l-en" style="--d:400ms;--em:6.7902">Regulatory Friction</span>
+        <div class="hero-figs rise" style="--d:560ms">
+          <div class="hero-num" data-tal="-5" data-text="−5">−5</div>
+          <div class="skala">
+            <div class="skala-spar">
+              <span class="skala-mitt"></span>
+              <span class="skala-markor" style="left:25%"></span>
+            </div>
+            <div class="skala-ax"><span>−10</span><span>0</span><span>+10</span></div>
+          </div>
+        </div>
+        <div class="rise" style="--d:760ms">
+<details class="metod hero-metod">
+      <summary><span class="metod-rubrik"><span class="l-sv">Så läses talet</span><span class="l-en">How to read the number</span></span><span class="metod-kort"><span class="l-sv">−1 sämre, 0 oförändrat, +1 bättre i ett bevakningsområde — talet är summan.</span><span class="l-en">−1 worse, 0 unchanged, +1 better in a monitoring area — the number is the sum.</span></span><span class="more"></span></summary>
+      <div class="metod-body">
+        <p class="l-sv">Varje bevakningsområde får ett steg för veckan: −1 om läget i området försämrats, 0 om det ligger oförändrat, +1 om det förbättrats. Talet högst upp är summan av områdenas steg.</p><p class="l-en">Each monitoring area is given one step for the week: −1 if the area has deteriorated, 0 if it is unchanged, +1 if it has improved. The number at the top is the sum of the steps across the areas.</p>
+        <h4><span class="l-sv">Vad stegen betyder</span><span class="l-en">What the steps mean</span></h4>
+        <ul class="skala">
+          <li><span class="l-sv"><b class="neg">−1</b> läget i området pekade nedåt den här veckan</span><span class="l-en"><b class="neg">−1</b> the area pointed down this week</span></li>
+          <li><span class="l-sv"><b class="neu">0</b> oförändrat: antingen vägde veckans artiklar jämnt, eller så kom ingen ny artikel i området</span><span class="l-en"><b class="neu">0</b> unchanged: either the week’s articles balanced out, or no new article arrived in the area</span></li>
+          <li><span class="l-sv"><b class="pos">+1</b> läget i området pekade uppåt den här veckan</span><span class="l-en"><b class="pos">+1</b> the area pointed up this week</span></li>
+        </ul>
+        <p class="l-sv">Ett område får aldrig ett steg skilt från 0 utan minst en källa från veckan. Saknas ny källa står området på 0 med markeringen &quot;oförändrat sedan vecka X&quot;.</p><p class="l-en">An area is never given a step other than 0 without at least one source from the week. Where no new source arrived, the area stands at 0 marked &quot;unchanged since week X&quot;.</p>
+        <p class="l-sv">Ett negativt tal betyder inte att veckan var dålig, utan att fler områden pekade nedåt än uppåt. Läs talet som en grovsortering av nyhetsflödet, inte som en mätning.</p><p class="l-en">A negative number does not mean the week was bad, only that more areas pointed down than up. Read the number as a rough sort of the news flow, not as a measurement.</p>
+        <h4><span class="l-sv">Områdena</span><span class="l-en">The areas</span></h4>
+            <div class="omr">
+              <h5>Regulatory Velocity</h5>
+              <p class="l-sv">Hur fort nya krav kommer: föreskrifter, EU-regler, remisser och ikraftträdanden. Pekar nedåt när kravbilden blir tyngre eller mer oförutsägbar.</p><p class="l-en">How fast new requirements arrive: national rules, EU rules, consultations and entry into force. Points down when the requirement load grows heavier or less predictable.</p>
+            </div>
+            <div class="omr">
+              <h5>Fatality &amp; SIF Trends</h5>
+              <p class="l-sv">Dödsolyckor och olyckor med potential att döda, i Sverige och jämförbara länder. Det är mönstret över veckor som räknas.</p><p class="l-en">Fatal accidents and incidents with the potential to kill, in Sweden and comparable countries. It is the pattern across weeks that counts.</p>
+            </div>
+            <div class="omr">
+              <h5>ESG Investment Flow</h5>
+              <p class="l-sv">Var kapitalet tar vägen: fonder, investeringsbeslut, gröna obligationer och uttalade tillbakadraganden. Visar trycket från ägare och finansiärer.</p><p class="l-en">Where capital is going: funds, investment decisions, green bonds and stated withdrawals. Shows the pressure from owners and financiers.</p>
+            </div>
+            <div class="omr">
+              <h5>PPE &amp; Safety Tech Adoption</h5>
+              <p class="l-sv">Skyddsutrustning, sensorer, maskinsäkerhet och digitala verktyg, men bara när de används i verksamheter. Produktnyheter utan spridning ger inget utslag.</p><p class="l-en">Protective equipment, sensors, machine safety and digital tools, but only where they are in use in operations. Product news without uptake does not move the area.</p>
+            </div>
+            <div class="omr">
+              <h5>Worker Health &amp; Mental Wellbeing</h5>
+              <p class="l-sv">Arbetsrelaterad ohälsa brett: belastning, exponering, buller, stress, kränkande särbehandling och sjukskrivningar. Reagerar på rapporter och statistik, inte enskilda händelser.</p><p class="l-en">Work-related ill health broadly: load, exposure, noise, stress, harassment and sick leave. Responds to reports and statistics, not single events.</p>
+            </div>
+            <div class="omr">
+              <h5>Enforcement &amp; Penalties</h5>
+              <p class="l-sv">Vad tillsynsmyndigheter och domstolar gör: inspektioner, förelägganden, sanktionsavgifter, företagsbot och åtal. Pekar nedåt när efterlevnaden brister.</p><p class="l-en">What regulators and courts do: inspections, notices, penalties, corporate fines and prosecutions. Points down when compliance is failing.</p>
+            </div>
+            <div class="omr">
+              <h5>Climate Adaptation Urgency</h5>
+              <p class="l-sv">Klimatets fysiska effekter här och nu: värme, bränder, översvämning, vattenbrist och driftavbrott. Handlar om anpassning, inte utsläppspolitik.</p><p class="l-en">The physical effects of climate here and now: heat, fires, floods, water shortage and operational disruption. About adaptation, not emissions policy.</p>
+            </div>
+            <div class="omr">
+              <h5>Supply Chain Accountability</h5>
+              <p class="l-sv">Ansvaret som följer med inköp: arbetsvillkor och miljöpåverkan hos leverantörer, spårbarhet och krav i avtal. Även störningar i kedjan.</p><p class="l-en">The responsibility that comes with purchasing: labour conditions and environmental impact at suppliers, traceability and requirements in contracts. Also disruptions in the chain.</p>
+            </div>
+            <div class="omr">
+              <h5>Energy Transition Compliance</h5>
+              <p class="l-sv">Kravsidan av energiomställningen: utsläppshandel, rapportering, tillstånd och energikrav. Även nya risker med batterier och vätgas.</p><p class="l-en">The compliance side of the energy transition: emissions trading, reporting, permits and energy requirements. Also new risks from batteries and hydrogen.</p>
+            </div>
+            <div class="omr">
+              <h5>Public Perception &amp; Trust</h5>
+              <p class="l-sv">Förtroendet utifrån: granskningar, opinion, protester och det som tvingar fram offentliga svar. Visar hur stort utrymmet för misstag är.</p><p class="l-en">Trust seen from outside: investigations, public opinion, protests and whatever forces public answers. Shows how much room for error there is.</p>
+            </div>
+      </div>
+    </details>
+        </div>
+      </div>
+      <div class="hero-fot rise" style="--d:960ms">
+        <div class="byline">
+<span class="l-sv who">Skapad av Erik Mattsson</span><span class="l-en who">Created by Erik Mattsson</span>
+      <span class="org">EM Safety &amp; Environment AB</span>
+      <p class="l-sv about">Femton år i verksamheter, bygger AI-produkter för EHS</p><p class="l-en about">Fifteen years inside operations, building AI products for EHS</p>
+        </div>
+        <a class="hero-mer" href="#veckans-tre"><span class="pil" aria-hidden="true"></span><span class="l-sv">Veckans tre</span><span class="l-en">The week's three</span></a>
+      </div>
+    </div>
+  </section>
+
+  <section class="tolv" aria-label="Tolv veckor">
+    <div class="wrap" data-stagger>
+      <div class="tolv-topp rise">
+        <span class="tolv-rubrik"><span class="l-sv">Tolv veckor</span><span class="l-en">Twelve weeks</span></span>
+        <span class="tolv-meta"><span class="l-sv">Veckans läge · 10 augusti 2026–16 augusti 2026</span><span class="l-en">This week · 10 August 2026 to 16 August 2026</span></span>
+      </div>
+      <p class="komp rise"><span class="l-sv">7 av 10 områden pekade nedåt, 2 uppåt, 1 oförändrade.</span><span class="l-en">7 of 10 areas pointed down, 2 up, 1 unchanged.</span></p>
+      <div class="kurva">
+      <svg class="spark" viewBox="0 0 1200 180" role="img" aria-hidden="true" style="--len:1253">
+        <line class="spark-noll" x1="26" y1="74" x2="1174" y2="74" vector-effect="non-scaling-stroke"/>
+        <polyline class="spark-line" points="26,90 130.36,106 234.73,154 339.09,154 443.45,154 547.82,154 652.18,26 756.55,90 860.91,74 965.27,90 1069.64,122 1174,154" vector-effect="non-scaling-stroke"/>
+        <circle class="spark-dot" cx="1174" cy="154" r="9"/>
+      </svg>
+      <div class="spark-ax">
+        <span>05-11</span>
+        <span>08-10</span>
+      </div>
+      </div>
+    </div>
+  </section>
+
+  <section id="veckans-tre" class="band band-b" aria-labelledby="tre-rubrik">
+    <div class="wrap smal" data-stagger>
+      <div class="sec-head rise">
+        <h2 id="tre-rubrik" class="l-sv">Veckans tre</h2><h2 class="l-en">The week's three</h2>
+      </div>
+      <ol class="tre-lista">
+        <li class="rise">
+          <p class="tre-mening"><span class="l-sv">Under veckan har flera allvarliga arbetsplatsolyckor rapporterats, inklusive två dödsfall och en SIF-incident, vilket indikerar brister i arbetsmiljösäkerheten.</span><span class="l-en">Several serious workplace accidents have been reported during the week, including two fatalities and a SIF incident, indicating deficiencies in workplace safety.</span></p>
+          <div class="tre-fot">
+            <span class="tre-riktning neg"><span class="l-sv">Nedåt</span><span class="l-en">Down</span></span>
+            <span class="sep">·</span>
+            <span class="tre-steg neg">−1</span>
+            <span class="sep">·</span>
+            <span>Fatality &amp; SIF Trends</span>
+          </div>
+        </li>
+        <li class="rise">
+          <p class="tre-mening"><span class="l-sv">Arbetsplatsolyckor, hög självmordsfrekvens inom byggindustrin, och trakasserier samt värmestress påverkar arbetarnas hälsa och välbefinnande negativt.</span><span class="l-en">Workplace accidents, high suicide rates in the construction industry, and harassment as well as heat stress negatively impact workers' health and well-being.</span></p>
+          <div class="tre-fot">
+            <span class="tre-riktning neg"><span class="l-sv">Nedåt</span><span class="l-en">Down</span></span>
+            <span class="sep">·</span>
+            <span class="tre-steg neg">−1</span>
+            <span class="sep">·</span>
+            <span>Worker Health &amp; Mental Wellbeing</span>
+          </div>
+        </li>
+        <li class="rise">
+          <p class="tre-mening"><span class="l-sv">Tyfonen Dolphin har orsakat evakueringar och stora avbrottsrisker i leverantörsled för europeisk industri, vilket tyder på försämrad leveranskedjans ansvarsskyldighet.</span><span class="l-en">Typhoon Dolphin has caused evacuations and major disruption risks in the supply chain for European industry, suggesting a deterioration in supply chain accountability.</span></p>
+          <div class="tre-fot">
+            <span class="tre-riktning neg"><span class="l-sv">Nedåt</span><span class="l-en">Down</span></span>
+            <span class="sep">·</span>
+            <span class="tre-steg neg">−1</span>
+            <span class="sep">·</span>
+            <span>Supply Chain Accountability</span>
+          </div>
+        </li>
+      </ol>
+      <p class="sec-lede rise"><span class="l-sv">Talet är summan av områdenas steg. Vad −1, 0 och +1 betyder står under &quot;Så läses talet&quot; i toppen.</span><span class="l-en">The number is the sum of the steps across the areas. What −1, 0 and +1 mean is explained under &quot;How to read the number&quot; at the top.</span></p>
+    </div>
+  </section>
+
+  <section class="band band-a">
+    <div class="wrap" data-stagger>
+  <section id="omraden">
+    <div class="rise sec-head">
+      <span class="l-sv kicker">Bedömning</span><span class="l-en kicker">Assessment</span>
+      <h2 class="l-sv">Signalområden</h2><h2 class="l-en">Signal areas</h2>
+      <p class="l-sv sec-lede">Områdena följs varje vecka. Poäng och motivering är EHS Sentinels egen, AI-genererade bedömning av veckans underlag, daterat 10 augusti 2026–16 augusti 2026. Fäll ut kortet för källorna bakom poängen: rubrik, källa, land, datum och länk till originalet, plus EHS Sentinels egen, AI-genererade notering till de artiklar som har en. Källor bakom betalvägg tas inte med.</p><p class="l-en sec-lede">The areas are followed every week. The score and justification are EHS Sentinel’s own, AI generated assessment of the material dated 10 August 2026 to 16 August 2026. Expand the card for what carries the score: headline, source, country, date and a link to the original, plus EHS Sentinel’s own, AI generated note for those articles that have one. Sources behind a paywall are not included.</p>
+    </div>
+    <div class="cards">
+          <div class="rise card">
+            <h3>Regulatory Velocity</h3>
+            <p class="l-sv def">Takten i nya regler och krav, Sverige och EU.</p><p class="l-en def">Pace of new rules and requirements, Sweden and EU.</p>
+            <div class="card-score">
+              <span class="v neg">−1</span>
+              <span class="bar"><i class="neg" style="width:20%"></i></span>
+            </div>
+            <div class="card-status"><span class="l-sv status-ny">Nya källor denna vecka</span><span class="l-en status-ny">New sources this week</span></div>
+            <p class="l-sv just">Nya regler för förpackningar i Sverige inför skärpta krav och PFAS-begränsningar, vilket kan påverka tillverkningsindustrin negativt.</p><p class="l-en just">New packaging regulations in Sweden introduce stricter requirements and PFAS limitations, which may negatively impact the manufacturing industry.</p>
+            <details class="kallor">
+              <summary><span class="l-sv more">Källor bakom poängen</span><span class="l-en more">Sources behind the score</span></summary>
+              <div class="kall-lista">
+          <article class="ev positive">
+            <div class="ev-title"><a href="https://ec.europa.eu/commission/presscorner/detail/en/mex_26_1735" target="_blank" rel="noopener">Daily News 14 / 08 / 2026</a></div>
+            <div class="ev-meta"><span class="cc l-sv" title="EU-källa">EU</span><span class="cc l-en" title="EU source">EU</span><span class="src">EU-kommissionen presscorner</span><span class="dot">·</span><span class="l-sv dat">14 augusti 2026</span><span class="l-en dat">14 August 2026</span></div>
+            
+          </article>
+          <article class="ev mixed">
+            <div class="ev-title"><a href="https://www.naturvardsverket.se/om-oss/aktuellt/nyheter-och-pressmeddelanden/2026/augusti/nya-regler-for-forpackningar-fran-12-augusti/" target="_blank" rel="noopener">Nya regler för förpackningar från 12 augusti</a></div>
+            <div class="ev-meta"><span class="cc l-sv" title="Svensk källa">SE</span><span class="cc l-en" title="Swedish source">SE</span><span class="src">Naturvårdsverket</span><span class="dot">·</span><span class="l-sv dat">10 augusti 2026</span><span class="l-en dat">10 August 2026</span></div>
+            <div class="l-sv ev-sum">Sverige inför nya regler för förpackningar som inkluderar skärpta krav och PFAS-begränsningar, vilket kan påverka tillverkningsindustrin.</div><div class="l-en ev-sum">Sweden introduces new packaging regulations that include stricter requirements and PFAS restrictions, which may affect the manufacturing industry.</div>
+          </article>
+              </div>
+            </details>
+          </div>
+          <div class="rise card">
+            <h3>Fatality &amp; SIF Trends</h3>
+            <p class="l-sv def">Dödsolyckor och allvarliga olyckor i arbetslivet.</p><p class="l-en def">Fatalities and serious injury events at work.</p>
+            <div class="card-score">
+              <span class="v neg">−1</span>
+              <span class="bar"><i class="neg" style="width:20%"></i></span>
+            </div>
+            <div class="card-status"><span class="l-sv status-ny">Nya källor denna vecka</span><span class="l-en status-ny">New sources this week</span></div>
+            <p class="l-sv just">Under veckan har flera allvarliga arbetsplatsolyckor rapporterats, inklusive två dödsfall och en SIF-incident, vilket indikerar brister i arbetsmiljösäkerheten.</p><p class="l-en just">Several serious workplace accidents have been reported during the week, including two fatalities and a SIF incident, indicating deficiencies in workplace safety.</p>
+            <details class="kallor">
+              <summary><span class="l-sv more">Källor bakom poängen</span><span class="l-en more">Sources behind the score</span></summary>
+              <div class="kall-lista">
+          <article class="ev negative">
+            <div class="ev-title"><a href="https://arbetet.se/2026/08/14/kevin-25-dog-pa-tagsparet-myndigheten-polisanmaler-bolaget/" target="_blank" rel="noopener">Kevin, 25, dog på tågspåret – myndigheten polisanmäler bolaget</a></div>
+            <div class="ev-meta"><span class="cc l-sv" title="Svensk källa">SE</span><span class="cc l-en" title="Swedish source">SE</span><span class="src">Arbetet</span><span class="dot">·</span><span class="l-sv dat">14 augusti 2026</span><span class="l-en dat">14 August 2026</span></div>
+            <div class="l-sv ev-sum">En banarbetare blev påkörd och omkom under arbetet, vilket resulterade i en polisanmälan av Arbetsmiljöverket, och understryker vikten av att förbättra järnvägssäkerhet i Sverige.</div><div class="l-en ev-sum">A track worker was struck and killed during work, resulting in a police report by Arbetsmiljöverket, highlighting the importance of improving railway safety in Sweden.</div>
+          </article>
+          <article class="ev negative">
+            <div class="ev-title"><a href="https://da.se/2026/08/man-dod-fick-truck-over-sig/" target="_blank" rel="noopener">Man död – fick truck över sig</a></div>
+            <div class="ev-meta"><span class="cc l-sv" title="Svensk källa">SE</span><span class="cc l-en" title="Swedish source">SE</span><span class="src">Dagens Arbete</span><span class="dot">·</span><span class="l-sv dat">14 augusti 2026</span><span class="l-en dat">14 August 2026</span></div>
+            <div class="l-sv ev-sum">Arbetsplatsolycka i Bankeryd där en man avled efter att ha fått en truck över sig, vilket pekar på allvarliga säkerhetsproblem i arbetsmiljön.</div><div class="l-en ev-sum">Workplace accident in Bankeryd where a man died after a forklift fell on him, indicating serious safety issues in the work environment.</div>
+          </article>
+          <article class="ev positive">
+            <div class="ev-title"><a href="https://www.safetyandhealthmagazine.com/new-nsc-survey-contractors-and-sif-risk/" target="_blank" rel="noopener">New National Safety Council survey: contractors and SIF risk</a></div>
+            <div class="ev-meta"><span class="cc l-sv" title="Amerikansk källa">US</span><span class="cc l-en" title="US source">US</span><span class="src">Safety+Health Magazine</span><span class="dot">·</span><span class="l-sv dat">14 augusti 2026</span><span class="l-en dat">14 August 2026</span></div>
+            
+          </article>
+          <article class="ev negative">
+            <div class="ev-title"><a href="https://press.hse.gov.uk/2026/08/12/council-fined-6000-after-stepladder-collapse-leaves-worker-with-broken-ribs/" target="_blank" rel="noopener">Council fined £6000 after stepladder collapse leaves worker with broken ribs</a></div>
+            <div class="ev-meta"><span class="cc l-sv" title="Brittisk källa">UK</span><span class="cc l-en" title="UK source">UK</span><span class="src">HSE UK</span><span class="dot">·</span><span class="l-sv dat">12 augusti 2026</span><span class="l-en dat">12 August 2026</span></div>
+            
+          </article>
+          <article class="ev negative">
+            <div class="ev-title"><a href="https://www.svt.se/nyheter/lokalt/gavleborg/arbetsplatsolycka-i-ashammar-skadades-av-fallande-glas" target="_blank" rel="noopener">Arbetsplatsolycka i Åshammar – skadades av fallande glas</a></div>
+            <div class="ev-meta"><span class="cc l-sv" title="Svensk källa">SE</span><span class="cc l-en" title="Swedish source">SE</span><span class="src">SVT Nyheter</span><span class="dot">·</span><span class="l-sv dat">10 augusti 2026</span><span class="l-en dat">10 August 2026</span></div>
+            <div class="l-sv ev-sum">Arbetsplatsolycka i Åshammar, Sandvikens kommun, där en person skadades av fallande glas — svensk SIF-händelse med materialhantering som riskkälla.</div><div class="l-en ev-sum">Workplace accident in Åshammar, Sandviken municipality, where a person was injured by falling glass—a Swedish SIF incident with material handling as a risk source.</div>
+          </article>
+              </div>
+            </details>
+          </div>
+          <div class="rise card">
+            <h3>ESG Investment Flow</h3>
+            <p class="l-sv def">Kapital som rör sig mot hållbarhet, och bort.</p><p class="l-en def">Capital moving toward sustainability, and away from it.</p>
+            <div class="card-score">
+              <span class="v pos">+1</span>
+              <span class="bar"><i class="pos" style="width:20%"></i></span>
+            </div>
+            <div class="card-status"><span class="l-sv status-ny">Nya källor denna vecka</span><span class="l-en status-ny">New sources this week</span></div>
+            <p class="l-sv just">Veckans material visar på betydande investeringar inom grön obligation, ren energi och ESG-realiserande initiativ, vilket tyder på en förbättring i ESG-investeringsflödet.</p><p class="l-en just">This week's material shows significant investments in green bonds, clean energy, and ESG-realizing initiatives, suggesting an improvement in ESG investment flow.</p>
+            <details class="kallor">
+              <summary><span class="l-sv more">Källor bakom poängen</span><span class="l-en more">Sources behind the score</span></summary>
+              <div class="kall-lista">
+          <article class="ev mixed">
+            <div class="ev-title"><a href="https://esgnews.com/sse-raises-708-million-in-debut-australian-green-bond/" target="_blank" rel="noopener">SSE Raises $708 Million in Debut Australian Green Bond</a></div>
+            <div class="ev-meta"><span class="cc l-sv" title="Amerikansk källa">US</span><span class="cc l-en" title="US source">US</span><span class="src">ESG News</span><span class="dot">·</span><span class="l-sv dat">14 augusti 2026</span><span class="l-en dat">14 August 2026</span></div>
+            
+          </article>
+          <article class="ev mixed">
+            <div class="ev-title"><a href="https://esgnews.com/diginex-resulticks-sign-1-05b-ai-and-esg-deal/" target="_blank" rel="noopener">Diginex, Resulticks Sign $1.05B AI and ESG Deal</a></div>
+            <div class="ev-meta"><span class="cc l-sv" title="Amerikansk källa">US</span><span class="cc l-en" title="US source">US</span><span class="src">ESG News</span><span class="dot">·</span><span class="l-sv dat">14 augusti 2026</span><span class="l-en dat">14 August 2026</span></div>
+            
+          </article>
+          <article class="ev positive">
+            <div class="ev-title"><a href="https://esgnews.com/rio-tinto-backs-tomago-smelter-with-770m-deal/" target="_blank" rel="noopener">Rio Tinto Backs Tomago Smelter With $770M Deal</a></div>
+            <div class="ev-meta"><span class="cc l-sv" title="Amerikansk källa">US</span><span class="cc l-en" title="US source">US</span><span class="src">ESG News</span><span class="dot">·</span><span class="l-sv dat">14 augusti 2026</span><span class="l-en dat">14 August 2026</span></div>
+            
+          </article>
+          <article class="ev positive">
+            <div class="ev-title"><a href="https://www.esgtoday.com/cip-raises-3-billion-for-growth-markets-focused-clean-energy-infrastructure-fund/" target="_blank" rel="noopener">CIP Raises $3 Billion for Growth Markets-Focused Clean Energy Infrastructure Fund</a></div>
+            <div class="ev-meta"><span class="cc l-sv" title="Amerikansk källa">US</span><span class="cc l-en" title="US source">US</span><span class="src">ESG Today</span><span class="dot">·</span><span class="l-sv dat">14 augusti 2026</span><span class="l-en dat">14 August 2026</span></div>
+            
+          </article>
+          <article class="ev mixed">
+            <div class="ev-title"><a href="https://www.esgtoday.com/what-mandatory-emissions-disclosure-looks-like-in-practice-lessons-from-japan/" target="_blank" rel="noopener">What Mandatory Emissions Disclosure Looks Like in Practice: Lessons from Japan</a></div>
+            <div class="ev-meta"><span class="cc l-sv" title="Amerikansk källa">US</span><span class="cc l-en" title="US source">US</span><span class="src">ESG Today</span><span class="dot">·</span><span class="l-sv dat">13 augusti 2026</span><span class="l-en dat">13 August 2026</span></div>
+            
+          </article>
+          <article class="ev positive">
+            <div class="ev-title"><a href="https://www.esgtoday.com/climate-fund-managers-raises-over-180-million-to-back-green-hydrogen-value-chain-in-southern-africa/" target="_blank" rel="noopener">Climate Fund Managers Raises Over $180 Million to Back Green Hydrogen Value Chain in Southern Africa</a></div>
+            <div class="ev-meta"><span class="cc l-sv" title="Amerikansk källa">US</span><span class="cc l-en" title="US source">US</span><span class="src">ESG Today</span><span class="dot">·</span><span class="l-sv dat">13 augusti 2026</span><span class="l-en dat">13 August 2026</span></div>
+            
+          </article>
+              </div>
+            </details>
+          </div>
+          <div class="rise card">
+            <h3>PPE &amp; Safety Tech Adoption</h3>
+            <p class="l-sv def">Skyddsutrustning och ny säkerhetsteknik i användning.</p><p class="l-en def">Protective equipment and new safety technology in use.</p>
+            <div class="card-score">
+              <span class="v neu">0</span>
+              <span class="bar"><i class="neu" style="width:10%"></i></span>
+            </div>
+            <div class="card-status"><span class="l-sv status-ny">Ny källa denna vecka</span><span class="l-en status-ny">New source this week</span></div>
+            <p class="l-sv just">Det finns en neutral diskussion om cyborgarbetare, men ingen specifik information om adoption av personlig skyddsutrustning eller säkerhetsteknik.</p><p class="l-en just">There is a neutral discussion about cyborg workers, but no specific information on the adoption of personal protective equipment or safety technology.</p>
+            <details class="kallor">
+              <summary><span class="l-sv more">Källor bakom poängen</span><span class="l-en more">Sources behind the score</span></summary>
+              <div class="kall-lista">
+          <article class="ev mixed">
+            <div class="ev-title"><a href="https://www.etui.org/events/cyborg-workers-30-0" target="_blank" rel="noopener">Cyborg workers 3.0</a></div>
+            <div class="ev-meta"><span class="cc l-sv" title="EU-källa">EU</span><span class="cc l-en" title="EU source">EU</span><span class="src">ETUI</span><span class="dot">·</span><span class="l-sv dat">13 augusti 2026</span><span class="l-en dat">13 August 2026</span></div>
+            
+          </article>
+              </div>
+            </details>
+          </div>
+          <div class="rise card">
+            <h3>Worker Health &amp; Mental Wellbeing</h3>
+            <p class="l-sv def">Arbetshälsa, psykosocial arbetsmiljö och arbetsrelaterad ohälsa.</p><p class="l-en def">Occupational health, psychosocial environment, work-related illness.</p>
+            <div class="card-score">
+              <span class="v neg">−1</span>
+              <span class="bar"><i class="neg" style="width:20%"></i></span>
+            </div>
+            <div class="card-status"><span class="l-sv status-ny">Nya källor denna vecka</span><span class="l-en status-ny">New sources this week</span></div>
+            <p class="l-sv just">Arbetsplatsolyckor, hög självmordsfrekvens inom byggindustrin, och trakasserier samt värmestress påverkar arbetarnas hälsa och välbefinnande negativt.</p><p class="l-en just">Workplace accidents, high suicide rates in the construction industry, and harassment as well as heat stress negatively impact workers' health and well-being.</p>
+            <details class="kallor">
+              <summary><span class="l-sv more">Källor bakom poängen</span><span class="l-en more">Sources behind the score</span></summary>
+              <div class="kall-lista">
+          <article class="ev mixed">
+            <div class="ev-title"><a href="https://arbetet.se/2026/08/14/utslitna-och-dor-tidigare-byggjobbaren-mikael-rasar-mot-orattvis-pensionsalder/" target="_blank" rel="noopener">Utslitna och dör tidigare – byggjobbaren Mikael rasar mot orättvis pensionsålder</a></div>
+            <div class="ev-meta"><span class="cc l-sv" title="Svensk källa">SE</span><span class="cc l-en" title="Swedish source">SE</span><span class="src">Arbetet</span><span class="dot">·</span><span class="l-sv dat">14 augusti 2026</span><span class="l-en dat">14 August 2026</span></div>
+            
+          </article>
+          <article class="ev negative">
+            <div class="ev-title"><a href="https://da.se/2026/08/man-dod-fick-truck-over-sig/" target="_blank" rel="noopener">Man död – fick truck över sig</a></div>
+            <div class="ev-meta"><span class="cc l-sv" title="Svensk källa">SE</span><span class="cc l-en" title="Swedish source">SE</span><span class="src">Dagens Arbete</span><span class="dot">·</span><span class="l-sv dat">14 augusti 2026</span><span class="l-en dat">14 August 2026</span></div>
+            <div class="l-sv ev-sum">Arbetsplatsolycka i Bankeryd där en man avled efter att ha fått en truck över sig, vilket pekar på allvarliga säkerhetsproblem i arbetsmiljön.</div><div class="l-en ev-sum">Workplace accident in Bankeryd where a man died after a forklift fell on him, indicating serious safety issues in the work environment.</div>
+          </article>
+          <article class="ev mixed">
+            <div class="ev-title"><a href="https://www.theguardian.com/environment/2026/aug/14/uk-workers-struggling-in-extreme-heat" target="_blank" rel="noopener">Builders, bakers and cheeseburger-makers: the UK workers struggling in extreme heat</a></div>
+            <div class="ev-meta"><span class="cc l-sv" title="Brittisk källa">UK</span><span class="cc l-en" title="UK source">UK</span><span class="src">Guardian Environment</span><span class="dot">·</span><span class="l-sv dat">14 augusti 2026</span><span class="l-en dat">14 August 2026</span></div>
+            
+          </article>
+          <article class="ev negative">
+            <div class="ev-title"><a href="https://www.safetyandhealthmagazine.com/senate-bill-targets-tragically-high-suicide-rate-in-the-construction-industry/" target="_blank" rel="noopener">Senate bill targets construction industry’s ‘tragically high’ suicide rate</a></div>
+            <div class="ev-meta"><span class="cc l-sv" title="Amerikansk källa">US</span><span class="cc l-en" title="US source">US</span><span class="src">Safety+Health Magazine</span><span class="dot">·</span><span class="l-sv dat">14 augusti 2026</span><span class="l-en dat">14 August 2026</span></div>
+            
+          </article>
+          <article class="ev negative">
+            <div class="ev-title"><a href="https://osha.europa.eu/en/highlights/tackling-sexual-and-cyber-harassment-workplace" target="_blank" rel="noopener">Harassment at work</a></div>
+            <div class="ev-meta"><span class="cc l-sv" title="EU-källa">EU</span><span class="cc l-en" title="EU source">EU</span><span class="src">EU-OSHA</span><span class="dot">·</span><span class="l-sv dat">10 augusti 2026</span><span class="l-en dat">10 August 2026</span></div>
+            <div class="l-sv ev-sum">EU-OSHA: nästan var tredje kvinna i Europa utsätts för trakasserier på jobbet, fysiskt eller digitalt — direkt kopplat till de svenska OSA-kraven i AFS 2023:2.</div><div class="l-en ev-sum">EU-OSHA: nearly one in three women in Europe experience harassment at work, physically or digitally, directly linked to the Swedish OSA requirements in AFS 2023:2.</div>
+          </article>
+          <article class="ev positive">
+            <div class="ev-title"><a href="https://osha.europa.eu/en/highlights/managing-psychosocial-risks-through-anti-harassment-protocols-confidential-reporting-and-more" target="_blank" rel="noopener">comparative report brings together insights from nine case studies</a></div>
+            <div class="ev-meta"><span class="cc l-sv" title="EU-källa">EU</span><span class="cc l-en" title="EU source">EU</span><span class="src">EU-OSHA</span><span class="dot">·</span><span class="l-sv dat">10 augusti 2026</span><span class="l-en dat">10 August 2026</span></div>
+            <div class="l-sv ev-sum">EU-OSHA:s nya jämförande rapport med nio europeiska fallstudier visar hur psykosociala risker kan förebyggas i praktiken — användbart metodunderlag för svenskt OSA-arbete.</div><div class="l-en ev-sum">EU-OSHA's new comparative report with nine European case studies shows how psychosocial risks can be prevented in practice—useful methodological basis for Swedish OSA work.</div>
+          </article>
+          <article class="ev positive">
+            <div class="ev-title"><a href="https://osha.europa.eu/en/publications/preventing-psychosocial-risks-europe-strategies-legislation-and-lessons-practice" target="_blank" rel="noopener">comparative report examines psychosocial risk prevention across five</a></div>
+            <div class="ev-meta"><span class="cc l-sv" title="EU-källa">EU</span><span class="cc l-en" title="EU source">EU</span><span class="src">EU-OSHA</span><span class="dot">·</span><span class="l-sv dat">10 augusti 2026</span><span class="l-en dat">10 August 2026</span></div>
+            <div class="l-sv ev-sum">EU-OSHA jämför strategier, lagstiftning och branschinsatser för psykosociala risker i fem europeiska länder — ger benchmark för hur Sverige ligger till.</div><div class="l-en ev-sum">EU-OSHA compares strategies, legislation, and industry initiatives for psychosocial risks in five European countries—provides a benchmark for Sweden's standing.</div>
+          </article>
+          <article class="ev negative">
+            <div class="ev-title"><a href="https://www.theguardian.com/uk-news/2026/aug/10/uk-temperatures-heatwave-summer-met-office-warning" target="_blank" rel="noopener">UK temperatures could hit 36C as fifth heatwave of summer looms</a></div>
+            <div class="ev-meta"><span class="cc l-sv" title="Brittisk källa">UK</span><span class="cc l-en" title="UK source">UK</span><span class="src">Guardian Environment</span><span class="dot">·</span><span class="l-sv dat">10 augusti 2026</span><span class="l-en dat">10 August 2026</span></div>
+            <div class="l-sv ev-sum">Femte värmeböljan denna sommar i Storbritannien med upp till 36 grader och möjlig röd varning — värmestress i arbetsmiljön är nu ett återkommande sommarproblem även för svenska arbetsgivare.</div><div class="l-en ev-sum">Fifth heatwave this summer in the United Kingdom with up to 36 degrees and a possible red warning—heat stress in the work environment is now a recurring summer problem even for Swedish employers.</div>
+          </article>
+              </div>
+            </details>
+          </div>
+          <div class="rise card">
+            <h3>Enforcement &amp; Penalties</h3>
+            <p class="l-sv def">Tillsyn, sanktioner och domar mot verksamheter.</p><p class="l-en def">Inspection, sanctions and rulings against operations.</p>
+            <div class="card-score">
+              <span class="v neg">−1</span>
+              <span class="bar"><i class="neg" style="width:20%"></i></span>
+            </div>
+            <div class="card-status"><span class="l-sv status-ny">Nya källor denna vecka</span><span class="l-en status-ny">New sources this week</span></div>
+            <p class="l-sv just">Flera företag och organisationer har fått böter eller polisanmälts på grund av allvarliga arbetsplatsolyckor, vilket indikerar en bristande efterlevnad av säkerhetsföreskrifter.</p><p class="l-en just">Several companies and organizations have been fined or reported to the police due to serious workplace accidents, indicating a lack of compliance with safety regulations.</p>
+            <details class="kallor">
+              <summary><span class="l-sv more">Källor bakom poängen</span><span class="l-en more">Sources behind the score</span></summary>
+              <div class="kall-lista">
+          <article class="ev negative">
+            <div class="ev-title"><a href="https://arbetet.se/2026/08/14/kevin-25-dog-pa-tagsparet-myndigheten-polisanmaler-bolaget/" target="_blank" rel="noopener">Kevin, 25, dog på tågspåret – myndigheten polisanmäler bolaget</a></div>
+            <div class="ev-meta"><span class="cc l-sv" title="Svensk källa">SE</span><span class="cc l-en" title="Swedish source">SE</span><span class="src">Arbetet</span><span class="dot">·</span><span class="l-sv dat">14 augusti 2026</span><span class="l-en dat">14 August 2026</span></div>
+            <div class="l-sv ev-sum">En banarbetare blev påkörd och omkom under arbetet, vilket resulterade i en polisanmälan av Arbetsmiljöverket, och understryker vikten av att förbättra järnvägssäkerhet i Sverige.</div><div class="l-en ev-sum">A track worker was struck and killed during work, resulting in a police report by Arbetsmiljöverket, highlighting the importance of improving railway safety in Sweden.</div>
+          </article>
+          <article class="ev negative">
+            <div class="ev-title"><a href="https://press.hse.gov.uk/2026/08/12/council-fined-6000-after-stepladder-collapse-leaves-worker-with-broken-ribs/" target="_blank" rel="noopener">Council fined £6000 after stepladder collapse leaves worker with broken ribs</a></div>
+            <div class="ev-meta"><span class="cc l-sv" title="Brittisk källa">UK</span><span class="cc l-en" title="UK source">UK</span><span class="src">HSE UK</span><span class="dot">·</span><span class="l-sv dat">12 augusti 2026</span><span class="l-en dat">12 August 2026</span></div>
+            
+          </article>
+          <article class="ev negative">
+            <div class="ev-title"><a href="https://press.hse.gov.uk/2026/08/12/packaging-manufacturer-fined-for-second-time-in-less-than-a-year-after-workers-hand-crushed-in-laminator-machine/" target="_blank" rel="noopener">Packaging manufacturer fined for second time in less than a year after worker’s hand crushed in laminator machine</a></div>
+            <div class="ev-meta"><span class="cc l-sv" title="Brittisk källa">UK</span><span class="cc l-en" title="UK source">UK</span><span class="src">HSE UK</span><span class="dot">·</span><span class="l-sv dat">12 augusti 2026</span><span class="l-en dat">12 August 2026</span></div>
+            
+          </article>
+          <article class="ev negative">
+            <div class="ev-title"><a href="https://press.hse.gov.uk/2026/08/10/building-contractor-fined-after-employee-fell-through-a-fragile-roof/" target="_blank" rel="noopener">Building contractor fined after employee fell through a fragile roof</a></div>
+            <div class="ev-meta"><span class="cc l-sv" title="Brittisk källa">UK</span><span class="cc l-en" title="UK source">UK</span><span class="src">HSE UK</span><span class="dot">·</span><span class="l-sv dat">10 augusti 2026</span><span class="l-en dat">10 August 2026</span></div>
+            
+          </article>
+              </div>
+            </details>
+          </div>
+          <div class="rise card">
+            <h3>Climate Adaptation Urgency</h3>
+            <p class="l-sv def">Klimatrisker som redan träffar verksamheter och arbetsmiljö.</p><p class="l-en def">Climate risks already hitting operations and workplaces.</p>
+            <div class="card-score">
+              <span class="v neg">−1</span>
+              <span class="bar"><i class="neg" style="width:20%"></i></span>
+            </div>
+            <div class="card-status"><span class="l-sv status-ny">Nya källor denna vecka</span><span class="l-en status-ny">New sources this week</span></div>
+            <p class="l-sv just">Flera händelser har påvisat allvarliga följder av klimatförändringar, inklusive extrema väderförhållanden och kritik mot politisk ledning i hanteringen av krisen. Dessa signaler tyder på en ökad brådska för klimatåtgärder.</p><p class="l-en just">Several events have demonstrated serious consequences of climate change, including extreme weather conditions and criticism of political leadership in handling the crisis. These signals indicate an increased urgency for climate action.</p>
+            <details class="kallor">
+              <summary><span class="l-sv more">Källor bakom poängen</span><span class="l-en more">Sources behind the score</span></summary>
+              <div class="kall-lista">
+          <article class="ev negative">
+            <div class="ev-title"><a href="https://www.svt.se/nyheter/inrikes/gula-varningar-for-skyfall-over-sverige" target="_blank" rel="noopener">Gula varningar för skyfall över Sverige</a></div>
+            <div class="ev-meta"><span class="cc l-sv" title="Svensk källa">SE</span><span class="cc l-en" title="Swedish source">SE</span><span class="src">SVT Inrikes</span><span class="dot">·</span><span class="l-sv dat">15 augusti 2026</span><span class="l-en dat">15 August 2026</span></div>
+            
+          </article>
+          <article class="ev mixed">
+            <div class="ev-title"><a href="https://www.theguardian.com/environment/2026/aug/14/stourbridge-wildfires-climate-change" target="_blank" rel="noopener">‘It’s due to climate’: the people of Stourbridge on the town’s wildfires</a></div>
+            <div class="ev-meta"><span class="cc l-sv" title="Brittisk källa">UK</span><span class="cc l-en" title="UK source">UK</span><span class="src">Guardian Environment</span><span class="dot">·</span><span class="l-sv dat">14 augusti 2026</span><span class="l-en dat">14 August 2026</span></div>
+            
+          </article>
+          <article class="ev negative">
+            <div class="ev-title"><a href="https://www.theguardian.com/environment/2026/aug/14/green-groups-urge-andy-burnham-to-break-silence-on-climate-crisis" target="_blank" rel="noopener">Green groups urge Andy Burnham to break silence on climate crisis</a></div>
+            <div class="ev-meta"><span class="cc l-sv" title="Brittisk källa">UK</span><span class="cc l-en" title="UK source">UK</span><span class="src">Guardian Environment</span><span class="dot">·</span><span class="l-sv dat">14 augusti 2026</span><span class="l-en dat">14 August 2026</span></div>
+            
+          </article>
+          <article class="ev mixed">
+            <div class="ev-title"><a href="https://www.theguardian.com/environment/2026/aug/14/el-nino-predicted-peak-amazon-rainforest-climate" target="_blank" rel="noopener">El Niño may peak at the worst time for the Amazon – and it should worry us all</a></div>
+            <div class="ev-meta"><span class="cc l-sv" title="Brittisk källa">UK</span><span class="cc l-en" title="UK source">UK</span><span class="src">Guardian Environment</span><span class="dot">·</span><span class="l-sv dat">14 augusti 2026</span><span class="l-en dat">14 August 2026</span></div>
+            
+          </article>
+          <article class="ev negative">
+            <div class="ev-title"><a href="https://www.theguardian.com/environment/2026/aug/14/andy-burnham-new-ev-sales-targets" target="_blank" rel="noopener">Burnham criticised for EV and North Sea approach amid climate crisis</a></div>
+            <div class="ev-meta"><span class="cc l-sv" title="Brittisk källa">UK</span><span class="cc l-en" title="UK source">UK</span><span class="src">Guardian Environment</span><span class="dot">·</span><span class="l-sv dat">14 augusti 2026</span><span class="l-en dat">14 August 2026</span></div>
+            
+          </article>
+          <article class="ev negative">
+            <div class="ev-title"><a href="https://www.theguardian.com/uk-news/2026/aug/10/uk-temperatures-heatwave-summer-met-office-warning" target="_blank" rel="noopener">UK temperatures could hit 36C as fifth heatwave of summer looms</a></div>
+            <div class="ev-meta"><span class="cc l-sv" title="Brittisk källa">UK</span><span class="cc l-en" title="UK source">UK</span><span class="src">Guardian Environment</span><span class="dot">·</span><span class="l-sv dat">10 augusti 2026</span><span class="l-en dat">10 August 2026</span></div>
+            <div class="l-sv ev-sum">Femte värmeböljan denna sommar i Storbritannien med upp till 36 grader och möjlig röd varning — värmestress i arbetsmiljön är nu ett återkommande sommarproblem även för svenska arbetsgivare.</div><div class="l-en ev-sum">Fifth heatwave this summer in the United Kingdom with up to 36 degrees and a possible red warning—heat stress in the work environment is now a recurring summer problem even for Swedish employers.</div>
+          </article>
+          <article class="ev negative">
+            <div class="ev-title"><a href="https://www.theguardian.com/world/2026/aug/10/typhoon-dolphin-china-shanghai-flooding-evacuations" target="_blank" rel="noopener">Typhoon Dolphin: more than a million people evacuated in China as record rainfall dumped on Shanghai</a></div>
+            <div class="ev-meta"><span class="cc l-sv" title="Brittisk källa">UK</span><span class="cc l-en" title="UK source">UK</span><span class="src">Guardian Environment</span><span class="dot">·</span><span class="l-sv dat">10 augusti 2026</span><span class="l-en dat">10 August 2026</span></div>
+            <div class="l-sv ev-sum">Över en miljon evakuerade i Kina vid rekordregn över Shanghai — stora avbrottsrisker i leverantörsled för europeisk industri.</div><div class="l-en ev-sum">Over one million evacuated in China due to record rainfall over Shanghai—significant disruption risks in the supply chain for European industry.</div>
+          </article>
+          <article class="ev mixed">
+            <div class="ev-title"><a href="https://www.naturvardsverket.se/om-oss/aktuellt/nyheter-och-pressmeddelanden/2026/augusti/nya-regler-for-forpackningar-fran-12-augusti/" target="_blank" rel="noopener">Nya regler för förpackningar från 12 augusti</a></div>
+            <div class="ev-meta"><span class="cc l-sv" title="Svensk källa">SE</span><span class="cc l-en" title="Swedish source">SE</span><span class="src">Naturvårdsverket</span><span class="dot">·</span><span class="l-sv dat">10 augusti 2026</span><span class="l-en dat">10 August 2026</span></div>
+            <div class="l-sv ev-sum">Sverige inför nya regler för förpackningar som inkluderar skärpta krav och PFAS-begränsningar, vilket kan påverka tillverkningsindustrin.</div><div class="l-en ev-sum">Sweden introduces new packaging regulations that include stricter requirements and PFAS restrictions, which may affect the manufacturing industry.</div>
+          </article>
+              </div>
+            </details>
+          </div>
+          <div class="rise card">
+            <h3>Supply Chain Accountability</h3>
+            <p class="l-sv def">Ansvar i leverantörskedjan, från råvara till kund.</p><p class="l-en def">Responsibility in the supply chain, raw material to customer.</p>
+            <div class="card-score">
+              <span class="v neg">−1</span>
+              <span class="bar"><i class="neg" style="width:20%"></i></span>
+            </div>
+            <div class="card-status"><span class="l-sv status-ny">Nya källor denna vecka</span><span class="l-en status-ny">New sources this week</span></div>
+            <p class="l-sv just">Tyfonen Dolphin har orsakat evakueringar och stora avbrottsrisker i leverantörsled för europeisk industri, vilket tyder på försämrad leveranskedjans ansvarsskyldighet.</p><p class="l-en just">Typhoon Dolphin has caused evacuations and major disruption risks in the supply chain for European industry, suggesting a deterioration in supply chain accountability.</p>
+            <details class="kallor">
+              <summary><span class="l-sv more">Källor bakom poängen</span><span class="l-en more">Sources behind the score</span></summary>
+              <div class="kall-lista">
+          <article class="ev positive">
+            <div class="ev-title"><a href="https://www.esgtoday.com/goldman-sachs-acquires-food-supply-chain-reusables-solutions-provider-tosca/" target="_blank" rel="noopener">Goldman Sachs Acquires Food Supply Chain Reusables Solutions Provider Tosca</a></div>
+            <div class="ev-meta"><span class="cc l-sv" title="Amerikansk källa">US</span><span class="cc l-en" title="US source">US</span><span class="src">ESG Today</span><span class="dot">·</span><span class="l-sv dat">13 augusti 2026</span><span class="l-en dat">13 August 2026</span></div>
+            
+          </article>
+          <article class="ev negative">
+            <div class="ev-title"><a href="https://www.theguardian.com/world/2026/aug/10/typhoon-dolphin-china-shanghai-flooding-evacuations" target="_blank" rel="noopener">Typhoon Dolphin: more than a million people evacuated in China as record rainfall dumped on Shanghai</a></div>
+            <div class="ev-meta"><span class="cc l-sv" title="Brittisk källa">UK</span><span class="cc l-en" title="UK source">UK</span><span class="src">Guardian Environment</span><span class="dot">·</span><span class="l-sv dat">10 augusti 2026</span><span class="l-en dat">10 August 2026</span></div>
+            <div class="l-sv ev-sum">Över en miljon evakuerade i Kina vid rekordregn över Shanghai — stora avbrottsrisker i leverantörsled för europeisk industri.</div><div class="l-en ev-sum">Over one million evacuated in China due to record rainfall over Shanghai—significant disruption risks in the supply chain for European industry.</div>
+          </article>
+              </div>
+            </details>
+          </div>
+          <div class="rise card">
+            <h3>Energy Transition Compliance</h3>
+            <p class="l-sv def">Regelefterlevnad i omställningen av energi och industri.</p><p class="l-en def">Compliance in the energy and industry transition.</p>
+            <div class="card-score">
+              <span class="v pos">+1</span>
+              <span class="bar"><i class="pos" style="width:20%"></i></span>
+            </div>
+            <div class="card-status"><span class="l-sv status-ny">Nya källor denna vecka</span><span class="l-en status-ny">New sources this week</span></div>
+            <p class="l-sv just">Det finns flera tecken på förbättrad efterlevnad av energiövergången genom betydande investeringar i batterilagring och solkraft samt ökat stöd för grönt väte i södra Afrika. Dessa satsningar tyder på en positiv utveckling mot ökad hållbarhet.</p><p class="l-en just">There are several signs of improved compliance with the energy transition through significant investments in battery storage and solar power, as well as increased support for green hydrogen in southern Africa. These efforts suggest a positive development towards increased sustainability.</p>
+            <details class="kallor">
+              <summary><span class="l-sv more">Källor bakom poängen</span><span class="l-en more">Sources behind the score</span></summary>
+              <div class="kall-lista">
+          <article class="ev mixed">
+            <div class="ev-title"><a href="https://esgnews.com/nextenergy-uk-fund-acquires-107-mw-battery-portfolio/" target="_blank" rel="noopener">NextEnergy UK Fund Acquires 107 MW Battery Portfolio</a></div>
+            <div class="ev-meta"><span class="cc l-sv" title="Amerikansk källa">US</span><span class="cc l-en" title="US source">US</span><span class="src">ESG News</span><span class="dot">·</span><span class="l-sv dat">14 augusti 2026</span><span class="l-en dat">14 August 2026</span></div>
+            
+          </article>
+          <article class="ev mixed">
+            <div class="ev-title"><a href="https://esgnews.com/recurrent-energy-starts-150-mw-solar-project-for-microsoft/" target="_blank" rel="noopener">Recurrent Energy Starts 150 MW Solar Project for Microsoft</a></div>
+            <div class="ev-meta"><span class="cc l-sv" title="Amerikansk källa">US</span><span class="cc l-en" title="US source">US</span><span class="src">ESG News</span><span class="dot">·</span><span class="l-sv dat">13 augusti 2026</span><span class="l-en dat">13 August 2026</span></div>
+            
+          </article>
+          <article class="ev positive">
+            <div class="ev-title"><a href="https://www.esgtoday.com/climate-fund-managers-raises-over-180-million-to-back-green-hydrogen-value-chain-in-southern-africa/" target="_blank" rel="noopener">Climate Fund Managers Raises Over $180 Million to Back Green Hydrogen Value Chain in Southern Africa</a></div>
+            <div class="ev-meta"><span class="cc l-sv" title="Amerikansk källa">US</span><span class="cc l-en" title="US source">US</span><span class="src">ESG Today</span><span class="dot">·</span><span class="l-sv dat">13 augusti 2026</span><span class="l-en dat">13 August 2026</span></div>
+            
+          </article>
+          <article class="ev mixed">
+            <div class="ev-title"><a href="https://www.esgtoday.com/samsung-acquires-gms-stake-in-3-5-billion-battery-joint-venture/" target="_blank" rel="noopener">Samsung Acquires GM’s Stake in $3.5 Billion Battery Joint Venture</a></div>
+            <div class="ev-meta"><span class="cc l-sv" title="Amerikansk källa">US</span><span class="cc l-en" title="US source">US</span><span class="src">ESG Today</span><span class="dot">·</span><span class="l-sv dat">13 augusti 2026</span><span class="l-en dat">13 August 2026</span></div>
+            
+          </article>
+              </div>
+            </details>
+          </div>
+          <div class="rise card">
+            <h3>Public Perception &amp; Trust</h3>
+            <p class="l-sv def">Allmänhetens förtroende för miljö- och säkerhetsarbete.</p><p class="l-en def">Public trust in environmental and safety performance.</p>
+            <div class="card-score">
+              <span class="v neg">−1</span>
+              <span class="bar"><i class="neg" style="width:20%"></i></span>
+            </div>
+            <div class="card-status"><span class="l-sv status-ny">Nya källor denna vecka</span><span class="l-en status-ny">New sources this week</span></div>
+            <p class="l-sv just">Flera artiklar beskriver strejknederlag och tveksamheter kring fackets agerande, vilket försämrar den offentliga uppfattningen och förtroendet för både strejken och facksamarbetet.</p><p class="l-en just">Several articles describe strike defeats and doubts about union actions, which degrade public perception and trust in both the strike and union cooperation.</p>
+            <details class="kallor">
+              <summary><span class="l-sv more">Källor bakom poängen</span><span class="l-en more">Sources behind the score</span></summary>
+              <div class="kall-lista">
+          <article class="ev mixed">
+            <div class="ev-title"><a href="https://arbetet.se/2026/08/13/lo-toppen-om-strejkfiaskot-for-javligt/" target="_blank" rel="noopener">LO-toppen om strejknederlaget: ”För jävligt”</a></div>
+            <div class="ev-meta"><span class="cc l-sv" title="Svensk källa">SE</span><span class="cc l-en" title="Swedish source">SE</span><span class="src">Arbetet</span><span class="dot">·</span><span class="l-sv dat">13 augusti 2026</span><span class="l-en dat">13 August 2026</span></div>
+            
+          </article>
+          <article class="ev mixed">
+            <div class="ev-title"><a href="https://arbetet.se/2026/08/13/teslastrejken-tar-ny-fart-men-oklart-vem-som-strejkar/" target="_blank" rel="noopener">Teslastrejken tar ny fart – men oklart vilka som strejkar</a></div>
+            <div class="ev-meta"><span class="cc l-sv" title="Svensk källa">SE</span><span class="cc l-en" title="Swedish source">SE</span><span class="src">Arbetet</span><span class="dot">·</span><span class="l-sv dat">13 augusti 2026</span><span class="l-en dat">13 August 2026</span></div>
+            
+          </article>
+          <article class="ev mixed">
+            <div class="ev-title"><a href="https://da.se/2026/08/veli-pekka-saikkala-om-slutet-pa-strejken-forjavligt/" target="_blank" rel="noopener">Veli-Pekka Säikkälä om slutet på strejken: ”Förjävligt”</a></div>
+            <div class="ev-meta"><span class="cc l-sv" title="Svensk källa">SE</span><span class="cc l-en" title="Swedish source">SE</span><span class="src">Dagens Arbete</span><span class="dot">·</span><span class="l-sv dat">13 augusti 2026</span><span class="l-en dat">13 August 2026</span></div>
+            
+          </article>
+          <article class="ev mixed">
+            <div class="ev-title"><a href="https://da.se/2026/08/strejkvakterna-packar-ihop-runt-om-i-landet-tung-kansla/" target="_blank" rel="noopener">Strejkvakterna packar ihop runt om i landet: ”Tung känsla”</a></div>
+            <div class="ev-meta"><span class="cc l-sv" title="Svensk källa">SE</span><span class="cc l-en" title="Swedish source">SE</span><span class="src">Dagens Arbete</span><span class="dot">·</span><span class="l-sv dat">13 augusti 2026</span><span class="l-en dat">13 August 2026</span></div>
+            
+          </article>
+          <article class="ev mixed">
+            <div class="ev-title"><a href="https://da.se/2026/08/strejken-startar-om-i-umea/" target="_blank" rel="noopener">Strejken startar om i Umeå: ”Behöver skriva en vitbok”</a></div>
+            <div class="ev-meta"><span class="cc l-sv" title="Svensk källa">SE</span><span class="cc l-en" title="Swedish source">SE</span><span class="src">Dagens Arbete</span><span class="dot">·</span><span class="l-sv dat">13 augusti 2026</span><span class="l-en dat">13 August 2026</span></div>
+            
+          </article>
+          <article class="ev mixed">
+            <div class="ev-title"><a href="https://kollega.se/strejk/if-metall-avbryter-strejken-mot-tesla" target="_blank" rel="noopener">IF Metall avbryter strejken mot Tesla</a></div>
+            <div class="ev-meta"><span class="cc l-sv" title="Svensk källa">SE</span><span class="cc l-en" title="Swedish source">SE</span><span class="src">Kollega</span><span class="dot">·</span><span class="l-sv dat">13 augusti 2026</span><span class="l-en dat">13 August 2026</span></div>
+            
+          </article>
+              </div>
+            </details>
+          </div>
+    </div>
+  </section>
+
+    </div>
+  </section>
+
+  <section class="band band-b">
+    <div class="wrap smal" data-stagger>
+  <section>
+    <div class="rise sec-head">
+      <span class="l-sv kicker">Historik</span><span class="l-en kicker">History</span>
+      <h2 class="l-sv">Läget vecka för vecka</h2><h2 class="l-en">Week by week</h2>
+      <p class="l-sv sec-lede">Senaste veckan ligger längst till höger. Scrolla vänster för historik.</p><p class="l-en sec-lede">The latest week sits furthest right. Scroll left for history.</p>
+    </div>
+    <div class="rise trend-outer" id="trend">
+      <div class="trend">
+            <div class="tcol">
+              <span class="tval">−1</span>
+              <div class="tplot"><div class="tup"></div><div class="tdown tzero"><div class="tbar neu" style="height:5px"></div></div></div>
+              <span class="tlabel">03-02</span>
+            </div>
+            <div class="tcol">
+              <span class="tval">+7</span>
+              <div class="tplot"><div class="tup"><div class="tbar pos" style="height:32px"></div></div><div class="tdown tzero"></div></div>
+              <span class="tlabel">03-09</span>
+            </div>
+            <div class="tcol">
+              <span class="tval">+5</span>
+              <div class="tplot"><div class="tup"><div class="tbar pos" style="height:23px"></div></div><div class="tdown tzero"></div></div>
+              <span class="tlabel">03-10</span>
+            </div>
+            <div class="tcol">
+              <span class="tval">0</span>
+              <div class="tplot"><div class="tup"></div><div class="tdown tzero"><div class="tbar neu" style="height:2px"></div></div></div>
+              <span class="tlabel">03-23</span>
+            </div>
+            <div class="tcol">
+              <span class="tval">−1</span>
+              <div class="tplot"><div class="tup"></div><div class="tdown tzero"><div class="tbar neu" style="height:5px"></div></div></div>
+              <span class="tlabel">03-24</span>
+            </div>
+            <div class="tcol">
+              <span class="tval">0</span>
+              <div class="tplot"><div class="tup"></div><div class="tdown tzero"><div class="tbar neu" style="height:2px"></div></div></div>
+              <span class="tlabel">03-30</span>
+            </div>
+            <div class="tcol">
+              <span class="tval">−3</span>
+              <div class="tplot"><div class="tup"></div><div class="tdown tzero"><div class="tbar neg" style="height:14px"></div></div></div>
+              <span class="tlabel">04-07</span>
+            </div>
+            <div class="tcol">
+              <span class="tval">−1</span>
+              <div class="tplot"><div class="tup"></div><div class="tdown tzero"><div class="tbar neu" style="height:5px"></div></div></div>
+              <span class="tlabel">04-14</span>
+            </div>
+            <div class="tcol">
+              <span class="tval">+3</span>
+              <div class="tplot"><div class="tup"><div class="tbar pos" style="height:14px"></div></div><div class="tdown tzero"></div></div>
+              <span class="tlabel">05-04</span>
+            </div>
+            <div class="tcol">
+              <span class="tval">−1</span>
+              <div class="tplot"><div class="tup"></div><div class="tdown tzero"><div class="tbar neu" style="height:5px"></div></div></div>
+              <span class="tlabel">05-11</span>
+            </div>
+            <div class="tcol">
+              <span class="tval">−2</span>
+              <div class="tplot"><div class="tup"></div><div class="tdown tzero"><div class="tbar neu" style="height:9px"></div></div></div>
+              <span class="tlabel">05-18</span>
+            </div>
+            <div class="tcol">
+              <span class="tval">−5</span>
+              <div class="tplot"><div class="tup"></div><div class="tdown tzero"><div class="tbar neg" style="height:23px"></div></div></div>
+              <span class="tlabel">06-08</span>
+            </div>
+            <div class="tcol">
+              <span class="tval">−5</span>
+              <div class="tplot"><div class="tup"></div><div class="tdown tzero"><div class="tbar neg" style="height:23px"></div></div></div>
+              <span class="tlabel">06-15</span>
+            </div>
+            <div class="tcol">
+              <span class="tval">−5</span>
+              <div class="tplot"><div class="tup"></div><div class="tdown tzero"><div class="tbar neg" style="height:23px"></div></div></div>
+              <span class="tlabel">06-22</span>
+            </div>
+            <div class="tcol">
+              <span class="tval">−5</span>
+              <div class="tplot"><div class="tup"></div><div class="tdown tzero"><div class="tbar neg" style="height:23px"></div></div></div>
+              <span class="tlabel">06-29</span>
+            </div>
+            <div class="tcol">
+              <span class="tval">+3</span>
+              <div class="tplot"><div class="tup"><div class="tbar pos" style="height:14px"></div></div><div class="tdown tzero"></div></div>
+              <span class="tlabel">07-06</span>
+            </div>
+            <div class="tcol">
+              <span class="tval">−1</span>
+              <div class="tplot"><div class="tup"></div><div class="tdown tzero"><div class="tbar neu" style="height:5px"></div></div></div>
+              <span class="tlabel">07-13</span>
+            </div>
+            <div class="tcol">
+              <span class="tval">0</span>
+              <div class="tplot"><div class="tup"></div><div class="tdown tzero"><div class="tbar neu" style="height:2px"></div></div></div>
+              <span class="tlabel">07-20</span>
+            </div>
+            <div class="tcol">
+              <span class="tval">−1</span>
+              <div class="tplot"><div class="tup"></div><div class="tdown tzero"><div class="tbar neu" style="height:5px"></div></div></div>
+              <span class="tlabel">07-27</span>
+            </div>
+            <div class="tcol">
+              <span class="tval">−3</span>
+              <div class="tplot"><div class="tup"></div><div class="tdown tzero"><div class="tbar neg" style="height:14px"></div></div></div>
+              <span class="tlabel">08-03</span>
+            </div>
+            <div class="tcol">
+              <span class="tval">−5</span>
+              <div class="tplot"><div class="tup"></div><div class="tdown tzero"><div class="tbar neg" style="height:23px"></div></div></div>
+              <span class="tlabel">08-10</span>
+            </div>
+      </div>
+    </div>
+    <p class="l-sv trend-note">De 21 senaste veckorna. Arkivet omfattar 31 veckor, från 22 december 2025.</p><p class="l-en trend-note">The last 21 weeks. The archive covers 31 weeks, from 22 December 2025.</p>
+  </section>
+
+    </div>
+  </section>
+
+  <section class="band band-a">
+    <div class="wrap" data-stagger>
+  <section id="iso">
+    <div class="rise sec-head iso-head-stor">
+      <span class="l-sv kicker">Regelverk</span><span class="l-en kicker">Standards</span>
+      <span class="l-sv"><h2 class="stor">ISO-standarder</h2></span><span class="l-en"><h2 class="stor">ISO standards</h2></span>
+      <p class="l-sv sec-underrubrik">Det här avsnittet följer andra regler än veckans bevakning: ingen AI-bedömning och ingen poäng, bara uppgifter som kunnat beläggas hos en namngiven källa, med länk och hämtdatum.</p><p class="l-en sec-underrubrik">This section follows different rules from the weekly monitoring: no AI assessment and no score, only statements that could be established at a named source, with a link and the retrieval date.</p>
+      <p class="l-sv sec-lede">Läget för ledningssystemstandarderna ISO 9001, 14001 och 45001, kontrollerat mot ISO:s eget standardregister, de tekniska kommittéernas sidor och SIS för den svenska utgåvan. Där ISO inte publicerat något står det rakt ut att uppgiften inte är belagd, och då redovisas i stället vad namngivna organ utanför ISO uppger.</p><p class="l-en sec-lede">The status of the management system standards ISO 9001, 14001 and 45001, checked against ISO’s own register, the pages of the technical committees and SIS for the Swedish edition. Where ISO has published nothing, it says so, and what named bodies outside ISO state is reported instead.</p>
+      <span class="l-sv stamp">Uppgifter hämtade 15 augusti 2026</span><span class="l-en stamp">Statements retrieved 15 August 2026</span>
+    </div>
+
+    <div class="rise panel markning">
+      <h4><span class="l-sv">Så läser du källmärkningen</span><span class="l-en">How to read the source marking</span></h4>
+      <ul class="markning-lista">
+        <li><span class="l-sv"><b>ISO</b>, <b>ISO/TC 176/SC 2</b>, <b>ISO/TC 283</b>, <b>ISO/TC 207/SC 1</b> — belagt hos ISO eller hos den tekniska kommittén. Säkraste nivån: uppgiften står i primärkällan.</span><span class="l-en"><b>ISO</b>, <b>ISO/TC 176/SC 2</b>, <b>ISO/TC 283</b>, <b>ISO/TC 207/SC 1</b> — established at ISO or at the technical committee. The most reliable level: the statement is in the primary source.</span></li>
+        <li><span class="l-sv"><b>SIS</b>, <b>DNV</b>, <b>LRQA</b>, <b>IAF</b>, <b>CQI/IRCA</b> och andra namngivna standardiserings- och certifieringsorgan — andrahandskälla. Organet står för uppgiften, inte ISO. Används för ändringssammanfattningar och för övergångstider som ISO inte publicerar.</span><span class="l-en"><b>SIS</b>, <b>DNV</b>, <b>LRQA</b>, <b>IAF</b>, <b>CQI/IRCA</b> and other named standardisation and certification bodies — secondary source. The body stands behind the statement, not ISO. Used for summaries of changes and for transition periods ISO does not publish.</span></li>
+        <li><span class="l-sv"><b>Tolkning: inte belagt hos ISO</b> — osäkraste nivån. Uppgiften finns inte hos ISO, eller källorna är oförenliga. Det som står är en tolkning av läget, inte ett besked. Gäller särskilt standarder som ännu inte är publicerade.</span><span class="l-en"><b>Interpretation: not established at ISO</b> — the least certain level. The statement is not available at ISO, or the sources are irreconcilable. What is written is a reading of the situation, not a ruling. This applies in particular to standards not yet published.</span></li>
+      </ul>
+      <p class="l-sv note">Är en standard inte publicerad finns ingen kravtext att återge. Då redovisas sammanfattningar av ändringar där ISO publicerat sådana, och i övrigt sammanfattningar av vad namngivna organ tolkar in i utgåvan.</p><p class="l-en note">Where a standard is not published there is no requirement text to reproduce. Summaries of changes are then given where ISO has published them, and otherwise summaries of what named bodies read into the edition.</p>
+    </div>
+
+    <p class="l-sv iso-stadier">Stadiekoderna är ISO:s egna: 40.20 innebär att ett DIS-förslag är ute på omröstning, 60.00 att standarden är i slutproduktion och 60.60 att den är publicerad. 90.92 betyder att en gällande standard ska revideras och 95.99 att den är återkallad. En standard gäller inte förrän den är publicerad.</p><p class="l-en iso-stadier">The stage codes are ISO’s own: 40.20 means a DIS draft is out for ballot, 60.00 that the standard is in final production and 60.60 that it is published. 90.92 means a standard in force is to be revised and 95.99 that it is withdrawn. A standard does not apply until it is published.</p>
+    <p class="l-sv iso-kontroll">Veckans kontroll läste ISO:s stadiekoder utan fel. Dessa källor gick däremot inte att läsa och redovisas som olästa: ISO/TC 207/SC 1 (HTTP 400).</p><p class="l-en iso-kontroll">This week’s check read ISO’s stage codes without error. These sources could not be read and are reported as unread: ISO/TC 207/SC 1 (HTTP 400).</p>
+
+          <details class="rise iso-row" id="iso-iso-9001">
+            <summary>
+              <span class="iso-head">
+                <span class="iso-std">ISO 9001</span>
+                <span class="l-sv iso-name">Ledningssystem för kvalitet</span><span class="l-en iso-name">Quality management systems</span>
+                
+              </span>
+              <span class="iso-stage"><span class="l-sv">Stadium 60.00 — under publicering</span><span class="l-en">Stage 60.00, under publication</span> <span class="src-tag l-sv">ISO</span><span class="src-tag l-en">ISO</span></span>
+              <span class="more"><span class="l-sv">Visa underlag</span><span class="l-en">Show detail</span></span>
+            </summary>
+            <div class="iso-body">
+              <div class="iso-block">
+                <h4><span class="l-sv">Stadium och publicering</span><span class="l-en">Stage and publication</span></h4>
+                <ul class="marked">
+                  <li><b class="l-sv">Stadium 60.00 — under publicering</b><b class="l-en">Stage 60.00, under publication</b> <span class="src-tag l-sv">ISO</span><span class="src-tag l-en">ISO</span><br><span class="l-sv note">FDIS godkänd. Utgåva 6. Teknisk kommitté ISO/TC 176/SC 2. ISO 9001:2015 står i stadium 90.92, ska revideras.</span><span class="l-en note">FDIS approved. Sixth edition. Technical committee ISO/TC 176/SC 2. ISO 9001:2015 sits at stage 90.92, to be revised.</span></li>
+                  <li><span class="l-sv">Förväntad publicering:</span><span class="l-en">Expected publication:</span> <b class="l-sv">16 september 2026</b><b class="l-en">16 September 2026</b> <span class="src-tag l-sv">ISO</span><span class="src-tag l-en">ISO</span><br><span class="l-sv note">iso.org anger 2026-09. ISO/TC 176/SC 2 anger 16 september 2026. Planerat, inte publicerat.</span><span class="l-en note">iso.org states 2026-09. ISO/TC 176/SC 2 states 16 September 2026. Planned, not published.</span></li>
+                </ul>
+              </div>
+              <div class="iso-block">
+                <h4><span class="l-sv">Uppgifter och källor</span><span class="l-en">Statements and sources</span></h4>
+                <ul class="marked">
+                <li><span class="l-sv txt">ISO 9001:2015 (utgåva 5) står i stadium 90.92, International Standard to be revised. ISO skriver att den väntas ersättas &quot;within the coming months&quot;.</span><span class="l-en txt">ISO 9001:2015 (fifth edition) sits at stage 90.92, International Standard to be revised. ISO writes that it is expected to be replaced &quot;within the coming months&quot;.</span> <span class="src-tag l-sv">ISO</span><span class="src-tag l-en">ISO</span></li>
+                <li><span class="l-sv txt">Revisionsprojektet är ISO 9001 utgåva 6, stadium 60.00, International Standard under publication, med publiceringsdatum 2026-09 angivet hos ISO.</span><span class="l-en txt">The revision project is ISO 9001 sixth edition, stage 60.00, International Standard under publication, with publication date 2026-09 stated by ISO.</span> <span class="src-tag l-sv">ISO</span><span class="src-tag l-en">ISO</span></li>
+                <li><span class="l-sv txt">ISO/TC 176/SC 2 skriver i en nyhet daterad 7 augusti 2026 att FDIS är godkänd och att sjätte utgåvan är planerad till publicering 16 september 2026.</span><span class="l-en txt">ISO/TC 176/SC 2 writes in a news item dated 7 August 2026 that the FDIS is approved and that the sixth edition is scheduled for publication on 16 September 2026.</span> <span class="src-tag l-sv">ISO/TC 176/SC 2</span><span class="src-tag l-en">ISO/TC 176/SC 2</span></li>
+                <li><span class="l-sv txt">Klimattillägget ISO 9001:2015/Amd 1:2024, &quot;Amendment 1: Climate action changes&quot;, är publicerat sedan februari 2024, stadium 60.60, och gäller redan i dag.</span><span class="l-en txt">The climate amendment ISO 9001:2015/Amd 1:2024, &quot;Amendment 1: Climate action changes&quot;, has been published since February 2024, stage 60.60, and already applies today.</span> <span class="src-tag l-sv">ISO</span><span class="src-tag l-en">ISO</span></li>
+                <li><span class="l-sv txt">Övergångstid tre år efter publicering, det vill säga omkring september 2029, anges av flera certifieringsorgan och av CQI/IRCA. Ingen primärkälla för övergångstiden kunde beläggas.</span><span class="l-en txt">A three year transition after publication, that is around September 2029, is stated by several certification bodies and by CQI/IRCA. No primary source for the transition period could be established.</span> <span class="src-tag l-sv">Certifieringsorgan, CQI/IRCA</span><span class="src-tag l-en">Certification bodies, CQI/IRCA</span></li>
+                <li><span class="l-sv txt">Innehållet i utgåva 6 kan inte beläggas ur primärkälla. ISO beskriver ändringarna enbart som &quot;addressing modern business needs and stakeholder expectations&quot; och har inte publicerat någon offentlig ändringssammanfattning. Uppgifter om nya krav på AI, digitalisering, klimat i kravtext, leverantörskedja eller kunskapshantering återges därför inte här.</span><span class="l-en txt">The content of the sixth edition cannot be established from a primary source. ISO describes the changes only as &quot;addressing modern business needs and stakeholder expectations&quot; and has published no public summary of changes. Claims about new requirements on AI, digitalisation, climate in the requirement text, supply chain or knowledge management are therefore not repeated here.</span> <span class="src-tag l-sv">Tolkning: inte belagt hos ISO</span><span class="src-tag l-en">Interpretation: not established at ISO</span></li>
+                <li><span class="l-sv txt">Exakt publiceringsdag. iso.org anger bara månad. Kommitténs datum, 16 september 2026, ligger på en sida som ISO låter tredje part förvalta. Behandla dagen som planerad, inte garanterad.</span><span class="l-en txt">The exact publication day. iso.org states the month only. The committee date, 16 September 2026, sits on a page ISO lets a third party manage. Treat the day as planned, not guaranteed.</span> <span class="src-tag l-sv">Tolkning: inte belagt hos ISO</span><span class="src-tag l-en">Interpretation: not established at ISO</span></li></ul>
+              </div>
+              <div class="iso-src"><span class="l-sv">Källor, hämtade 15 augusti 2026:</span><span class="l-en">Sources, retrieved 15 August 2026:</span> <a href="https://www.iso.org/standard/88464.html" target="_blank" rel="noopener"><span class="l-sv">Projektsidan, ISO 9001 utgåva 6</span><span class="l-en">Project page, ISO 9001 sixth edition</span></a><a href="https://www.iso.org/standard/62085.html" target="_blank" rel="noopener"><span class="l-sv">ISO 9001:2015 hos ISO</span><span class="l-en">ISO 9001:2015 at ISO</span></a><a href="https://committee.iso.org/sites/tc176sc2/home/news/content-left-area/news-and-updates/news-1.html" target="_blank" rel="noopener"><span class="l-sv">ISO/TC 176/SC 2, nyhet 7 augusti 2026</span><span class="l-en">ISO/TC 176/SC 2, news 7 August 2026</span></a></div>
+            </div>
+          </details>
+          <details class="rise iso-row" id="iso-iso-14001">
+            <summary>
+              <span class="iso-head">
+                <span class="iso-std">ISO 14001</span>
+                <span class="l-sv iso-name">Ledningssystem för miljö</span><span class="l-en iso-name">Environmental management systems</span>
+                
+              </span>
+              <span class="iso-stage"><span class="l-sv">Publicerad — stadium 60.60</span><span class="l-en">Published, stage 60.60</span> <span class="src-tag l-sv">ISO</span><span class="src-tag l-en">ISO</span></span>
+              <span class="more"><span class="l-sv">Visa underlag</span><span class="l-en">Show detail</span></span>
+            </summary>
+            <div class="iso-body">
+              <div class="iso-block">
+                <h4><span class="l-sv">Stadium och publicering</span><span class="l-en">Stage and publication</span></h4>
+                <ul class="marked">
+                  <li><b class="l-sv">Publicerad — stadium 60.60</b><b class="l-en">Published, stage 60.60</b> <span class="src-tag l-sv">ISO</span><span class="src-tag l-en">ISO</span><br><span class="l-sv note">ISO 14001:2026, utgåva 4, 36 sidor, teknisk kommitté ISO/TC 207/SC 1. 2015-utgåvan är återkallad, stadium 95.99.</span><span class="l-en note">ISO 14001:2026, fourth edition, 36 pages, technical committee ISO/TC 207/SC 1. The 2015 edition is withdrawn, stage 95.99.</span></li>
+                  <li><span class="l-sv">Förväntad publicering:</span><span class="l-en">Expected publication:</span> <b class="l-sv">april 2026 — redan publicerad</b><b class="l-en">April 2026, already published</b> <span class="src-tag l-sv">ISO</span><span class="src-tag l-en">ISO</span><br><span class="l-sv note">iso.org anger månad (2026-04). ISO:s publiceringsnyhet är daterad 15 april 2026. SS-EN ISO 14001:2026 är fastställd 2026-04-15 enligt SIS.</span><span class="l-en note">iso.org states the month (2026-04). ISO’s publication news is dated 15 April 2026. SS-EN ISO 14001:2026 was ratified 2026-04-15 according to SIS.</span></li>
+                </ul>
+              </div>
+              <div class="iso-block">
+                <h4><span class="l-sv">Uppgifter och källor</span><span class="l-en">Statements and sources</span></h4>
+                <ul class="marked">
+                <li><span class="l-sv txt">ISO 14001:2026 är publicerad: utgåva 4, stadium 60.60, publiceringsdatum 2026-04, 36 sidor.</span><span class="l-en txt">ISO 14001:2026 is published: fourth edition, stage 60.60, publication date 2026-04, 36 pages.</span> <span class="src-tag l-sv">ISO</span><span class="src-tag l-en">ISO</span></li>
+                <li><span class="l-sv txt">ISO 14001:2015 är återkallad, stadium 95.99, och ersatt av ISO 14001:2026.</span><span class="l-en txt">ISO 14001:2015 is withdrawn, stage 95.99, and replaced by ISO 14001:2026.</span> <span class="src-tag l-sv">ISO</span><span class="src-tag l-en">ISO</span></li>
+                <li><span class="l-sv txt">Svensk utgåva: SS-EN ISO 14001:2026, &quot;Miljöledningssystem — Krav och vägledning&quot;, utgåva 4, 48 sidor, fastställd 2026-04-15, status Gällande. Ersätter SS-EN ISO 14001:2015 och SS-EN ISO 14001:2015/A1:2024.</span><span class="l-en txt">Swedish edition: SS-EN ISO 14001:2026, &quot;Environmental management systems, requirements with guidance for use&quot;, fourth edition, 48 pages, ratified 2026-04-15, status in force. Replaces SS-EN ISO 14001:2015 and SS-EN ISO 14001:2015/A1:2024.</span> <span class="src-tag l-sv">SIS</span><span class="src-tag l-en">SIS</span></li>
+                <li><span class="l-sv txt">ISO anger i publiceringsnyheten att standarden används av mer än 670 000 certifierade organisationer i världen (ISO Survey, 2024).</span><span class="l-en txt">ISO states in the publication news that the standard is used by more than 670,000 certified organisations worldwide (ISO Survey, 2024).</span> <span class="src-tag l-sv">ISO</span><span class="src-tag l-en">ISO</span></li>
+                <li><span class="l-sv txt">Övergångstid tre år (36 månader) enligt IAF, räknat från publiceringen. Certifieringsorganen anger olika slutdatum: LRQA skriver början av april 2029, DNV och DQS skriver maj 2029.</span><span class="l-en txt">A three year (36 month) transition according to IAF, counted from publication. The certification bodies state different end dates: LRQA writes early April 2029, DNV and DQS write May 2029.</span> <span class="src-tag l-sv">IAF, LRQA, DNV, DQS</span><span class="src-tag l-en">IAF, LRQA, DNV, DQS</span></li>
+                <li><span class="l-sv txt">ISO 14001:2026 innefattar klimattillägget från 2024, det vill säga tillägget behöver inte hanteras separat längre.</span><span class="l-en txt">ISO 14001:2026 incorporates the 2024 climate amendment, meaning the amendment no longer has to be handled separately.</span> <span class="src-tag l-sv">DNV</span><span class="src-tag l-en">DNV</span></li>
+                <li><span class="l-sv txt">Exakt slutdatum för övergångsperioden kunde inte beläggas i primärkälla. ISO anger ingen övergångstid på sina egna sidor. Räkna med tre år från publiceringen enligt ackrediteringspraxis, inte med ett fastställt datum.</span><span class="l-en txt">The exact end date of the transition period could not be established in a primary source. ISO states no transition period on its own pages. Count on three years from publication according to accreditation practice, not on a fixed date.</span> <span class="src-tag l-sv">Tolkning: inte belagt hos ISO</span><span class="src-tag l-en">Interpretation: not established at ISO</span></li></ul>
+              </div>
+              <div class="iso-block">
+                <h4><span class="l-sv">Innehållsliga förändringar, enligt ISO</span><span class="l-en">Substantive changes, according to ISO</span> <span class="src-tag l-sv">ISO</span><span class="src-tag l-en">ISO</span></h4>
+                <p class="l-sv caveat">Punkterna nedan är ISO:s egen beskrivning av utgåvan, inte standardtexten. Klausulnumren är angivna av ISO.</p><p class="l-en caveat">The points below are ISO’s own description of the edition, not the standard text. The clause numbers are given by ISO.</p>
+                <ul class="plain"><li><span class="l-sv">Bredare miljömässig kontext: föroreningar, resurstillgång, klimatförändring, biologisk mångfald och ekosystemhälsa ska beaktas vid bedömning av kontext, risker och möjligheter. ISO hänvisar till klausul 4.1 och 4.2.</span><span class="l-en">A broader environmental context: pollution, resource availability, climate change, biodiversity and ecosystem health are to be considered when assessing context, risks and opportunities. ISO refers to clauses 4.1 and 4.2.</span></li><li><span class="l-sv">Starkare ledningsansvar. Miljöprestanda positioneras som ett ledningsansvar, med synligt ägarskap, mål kopplade till strategisk inriktning och miljöhänsyn integrerad i organisationskulturen.</span><span class="l-en">Stronger management responsibility. Environmental performance is positioned as a management responsibility, with visible ownership, objectives tied to strategic direction and environmental considerations integrated into the organisational culture.</span></li><li><span class="l-sv">Tydligare fokus på utfall. Kopplingen mellan miljöaspekter, bindande krav och åtgärder förstärks, med större vikt på mätbar prestanda än på att upprätthålla processer.</span><span class="l-en">A clearer focus on outcomes. The link between environmental aspects, binding requirements and actions is strengthened, with more weight on measurable performance than on maintaining processes.</span></li><li><span class="l-sv">Ny klausul 6.1.4 för risker och möjligheter, samt ett formaliserat sätt att hantera förändring i klausul 6.3.</span><span class="l-en">A new clause 6.1.4 for risks and opportunities, and a formalised way of handling change in clause 6.3.</span></li><li><span class="l-sv">&quot;Outsourcing&quot; är ersatt av &quot;externally provided processes, products and services&quot;. En terminologisk ändring med utökad täckning, inte ett nytt kravområde.</span><span class="l-en">&quot;Outsourcing&quot; is replaced by &quot;externally provided processes, products and services&quot;. A change of terminology with wider coverage, not a new requirement area.</span></li><li><span class="l-sv">Skärpt styrning: hårdare krav på internrevision, inklusive dokumenterade revisionsprogram och revisionsmål, samt en mer strukturerad ledningens genomgång.</span><span class="l-en">Tighter governance: stronger requirements on internal audit, including documented audit programmes and audit objectives, and a more structured management review.</span></li><li><span class="l-sv">Annex A får en mer aktiv roll och förtydligar begrepp som ledarskap, kultur, miljöansvar och engagemang. Livscykelperspektivet förtydligas men är inte nytt.</span><span class="l-en">Annex A takes a more active role and clarifies concepts such as leadership, culture, environmental responsibility and commitment. The life cycle perspective is clarified but is not new.</span></li></ul>
+              </div>
+              <div class="iso-src"><span class="l-sv">Källor, hämtade 15 augusti 2026:</span><span class="l-en">Sources, retrieved 15 August 2026:</span> <a href="https://www.iso.org/standard/92300.html" target="_blank" rel="noopener"><span class="l-sv">ISO 14001:2026 hos ISO</span><span class="l-en">ISO 14001:2026 at ISO</span></a><a href="https://www.iso.org/climate-change/iso-14001-2026" target="_blank" rel="noopener"><span class="l-sv">ISO: what’s changed</span><span class="l-en">ISO: what’s changed</span></a><a href="https://www.sis.se/produkter/foretagsorganisation/foretagsorganisation-och-foretagsledning-ledningssystem/ledningssystem/ss-en-iso-140012026/" target="_blank" rel="noopener"><span class="l-sv">SS-EN ISO 14001:2026 hos SIS</span><span class="l-en">SS-EN ISO 14001:2026 at SIS</span></a></div>
+            </div>
+          </details>
+          <details class="rise iso-row" id="iso-iso-45001">
+            <summary>
+              <span class="iso-head">
+                <span class="iso-std">ISO 45001</span>
+                <span class="l-sv iso-name">Ledningssystem för arbetsmiljö</span><span class="l-en iso-name">Occupational health and safety management systems</span>
+                
+              </span>
+              <span class="iso-stage"><span class="l-sv">Stadium 40.20 — DIS-omröstning pågår</span><span class="l-en">Stage 40.20, DIS ballot in progress</span> <span class="src-tag l-sv">ISO</span><span class="src-tag l-en">ISO</span></span>
+              <span class="more"><span class="l-sv">Visa underlag</span><span class="l-en">Show detail</span></span>
+            </summary>
+            <div class="iso-body">
+              <div class="iso-block">
+                <h4><span class="l-sv">Stadium och publicering</span><span class="l-en">Stage and publication</span></h4>
+                <ul class="marked">
+                  <li><b class="l-sv">Stadium 40.20 — DIS-omröstning pågår</b><b class="l-en">Stage 40.20, DIS ballot in progress</b> <span class="src-tag l-sv">ISO</span><span class="src-tag l-en">ISO</span><br><span class="l-sv note">ISO/DIS 45001, utgåva 2, 48 sidor, teknisk kommitté ISO/TC 283. Omröstningen inleddes 17 juni 2026 enligt kommitténs nyhet av 18 juni 2026.</span><span class="l-en note">ISO/DIS 45001, second edition, 48 pages, technical committee ISO/TC 283. The ballot opened on 17 June 2026 according to the committee news of 18 June 2026.</span></li>
+                  <li><span class="l-sv">Förväntad publicering:</span><span class="l-en">Expected publication:</span> <b class="l-sv">Ej belagt av ISO</b><b class="l-en">Not established by ISO</b> <span class="src-tag l-sv">Tolkning: inte belagt hos ISO</span><span class="src-tag l-en">Interpretation: not established at ISO</span><br><span class="l-sv note">ISO anger inget publiceringsdatum. Certifieringsorgan pekar på 2027, DNV på andra halvåret 2027 — det är andrahandsuppgifter, inte ett ISO-besked.</span><span class="l-en note">ISO states no publication date. Certification bodies point to 2027, DNV to the second half of 2027. Those are secondary sources, not an ISO statement.</span></li>
+                </ul>
+              </div>
+              <div class="iso-block">
+                <h4><span class="l-sv">Uppgifter och källor</span><span class="l-en">Statements and sources</span></h4>
+                <ul class="marked">
+                <li><span class="l-sv txt">ISO 45001:2018 (utgåva 1) står i stadium 90.92, International Standard to be revised, teknisk kommitté ISO/TC 283. ISO skriver att den väntas ersättas av ISO/DIS 45001 &quot;within the coming months&quot;.</span><span class="l-en txt">ISO 45001:2018 (first edition) sits at stage 90.92, International Standard to be revised, technical committee ISO/TC 283. ISO writes that it is expected to be replaced by ISO/DIS 45001 &quot;within the coming months&quot;.</span> <span class="src-tag l-sv">ISO</span><span class="src-tag l-en">ISO</span></li>
+                <li><span class="l-sv txt">Revisionsprojektet är ISO/DIS 45001, utgåva 2, 48 sidor, stadium 40.20, DIS ballot initiated. ISO anger inget publiceringsdatum.</span><span class="l-en txt">The revision project is ISO/DIS 45001, second edition, 48 pages, stage 40.20, DIS ballot initiated. ISO states no publication date.</span> <span class="src-tag l-sv">ISO</span><span class="src-tag l-en">ISO</span></li>
+                <li><span class="l-sv txt">ISO/TC 283 skriver i en nyhet daterad 18 juni 2026 att DIS gick in i omröstning dagen innan, det vill säga 17 juni 2026.</span><span class="l-en txt">ISO/TC 283 writes in a news item dated 18 June 2026 that the DIS entered ballot the day before, that is 17 June 2026.</span> <span class="src-tag l-sv">ISO/TC 283</span><span class="src-tag l-en">ISO/TC 283</span></li>
+                <li><span class="l-sv txt">Klimattillägget ISO 45001:2018/Amd 1:2024, &quot;Amendment 1: Climate action changes&quot;, är publicerat sedan februari 2024, stadium 60.60, och gäller redan i dag.</span><span class="l-en txt">The climate amendment ISO 45001:2018/Amd 1:2024, &quot;Amendment 1: Climate action changes&quot;, has been published since February 2024, stage 60.60, and already applies today.</span> <span class="src-tag l-sv">ISO</span><span class="src-tag l-en">ISO</span></li>
+                <li><span class="l-sv txt">Förväntad publicering 2027 enligt LRQA och NQA. DNV skriver att exakt datum inte är kommunicerat men att publicering sannolikt sker under andra halvåret 2027.</span><span class="l-en txt">Publication expected in 2027 according to LRQA and NQA. DNV writes that the exact date has not been communicated but that publication is likely in the second half of 2027.</span> <span class="src-tag l-sv">LRQA, NQA, DNV</span><span class="src-tag l-en">LRQA, NQA, DNV</span></li>
+                <li><span class="l-sv txt">Slutdatum för DIS-omröstningen går inte att fastställa. ISO/TC 283 skriver 9 augusti 2026, iso.org anger tolv veckor från 17 juni (början av september) och LRQA anger 8 september 2026. Uppgifterna är oförenliga, därför anges bara startdatum här.</span><span class="l-en txt">The closing date of the DIS ballot cannot be established. ISO/TC 283 writes 9 August 2026, iso.org states twelve weeks from 17 June (early September) and LRQA states 8 September 2026. The statements are irreconcilable, so only the start date is given here.</span> <span class="src-tag l-sv">Tolkning: inte belagt hos ISO</span><span class="src-tag l-en">Interpretation: not established at ISO</span></li>
+                <li><span class="l-sv txt">Innehållet i utgåva 2 kan inte beläggas ur offentlig primärkälla. ISO publicerar ingen ändringssammanfattning, och DIS-texten är den enda källa som håller för ett påstående om kravtext. Uppgifter om nya krav på psykosocial arbetsmiljö, digitalisering eller AI återges därför inte här.</span><span class="l-en txt">The content of the second edition cannot be established from a public primary source. ISO publishes no summary of changes, and the DIS text is the only source that would carry a claim about requirement text. Claims about new requirements on the psychosocial work environment, digitalisation or AI are therefore not repeated here.</span> <span class="src-tag l-sv">Tolkning: inte belagt hos ISO</span><span class="src-tag l-en">Interpretation: not established at ISO</span></li>
+                <li><span class="l-sv txt">Övergångstid efter publicering. Inget belagt. Andrahandskällor gissar på två till tre år.</span><span class="l-en txt">Transition period after publication. Nothing established. Secondary sources guess at two to three years.</span> <span class="src-tag l-sv">Tolkning: inte belagt hos ISO</span><span class="src-tag l-en">Interpretation: not established at ISO</span></li></ul>
+              </div>
+              <div class="iso-src"><span class="l-sv">Källor, hämtade 15 augusti 2026:</span><span class="l-en">Sources, retrieved 15 August 2026:</span> <a href="https://www.iso.org/standard/89698.html" target="_blank" rel="noopener"><span class="l-sv">ISO/DIS 45001 hos ISO</span><span class="l-en">ISO/DIS 45001 at ISO</span></a><a href="https://www.iso.org/standard/63787.html" target="_blank" rel="noopener"><span class="l-sv">ISO 45001:2018 hos ISO</span><span class="l-en">ISO 45001:2018 at ISO</span></a><a href="https://committee.iso.org/sites/tc283/home/news/content-left-area/news-and-updates/news.html" target="_blank" rel="noopener"><span class="l-sv">ISO/TC 283, nyhet 18 juni 2026</span><span class="l-en">ISO/TC 283, news 18 June 2026</span></a></div>
+            </div>
+          </details>
+  </section>
+
+    </div>
+  </section>
+
+  <section class="band band-b">
+    <div class="wrap smal" data-stagger>
+  <section>
+    <div class="rise sec-head">
+      <span class="l-sv kicker">Villkor</span><span class="l-en kicker">Terms</span>
+      <h2 class="l-sv">Ansvarsfriskrivning</h2><h2 class="l-en">Disclaimer</h2>
+    </div>
+    <div class="rise panel warn">
+      <p class="l-sv">Detta är <b>inte juridisk rådgivning</b> och ingen bedömning av något enskilt fall. Använd inte sidan som beslutsunderlag utan att gå till originalkällan och till gällande författning eller standardtext.</p><p class="l-en">This is <b>not legal advice</b> and not an assessment of any individual case. Do not use the page as a basis for decisions without going to the original source and to the applicable regulation or standard text.</p>
+      <p class="l-sv">Sidan är <b>inte en lagbevakningstjänst</b>. Den följer ett urval nyhetsflöden och gör inga anspråk på att fånga ändringar i lag, föreskrift eller standard när de sker. Att något saknas här betyder inte att det inte har hänt.</p><p class="l-en">The page is <b>not a legal monitoring service</b>. It follows a selection of news feeds and makes no claim to catch changes in law, regulation or standards as they happen. Something missing here does not mean it did not happen.</p>
+      <p class="l-sv"><b>Ingen garanti för fullständighet eller riktighet.</b> Urvalet är begränsat och sammanfattningarna är maskingenererade och kan innehålla fel. Rubriker och länkar tillhör respektive upphovsman, och innehåll bakom betalvägg återges inte här.</p><p class="l-en"><b>No guarantee of completeness or correctness.</b> The selection is limited and the summaries are machine generated and may contain errors. Headlines and links belong to their respective authors, and content behind a paywall is not reproduced here.</p>
+    </div>
+  </section>
+
+    </div>
+  </section>
+
+  <section id="om" class="band band-a">
+    <div class="wrap" data-stagger>
+      <div class="sec-head rise">
+        <span class="l-sv kicker">Om</span><span class="l-en kicker">About</span>
+        <h2 class="l-sv">Om EHS Sentinel</h2><h2 class="l-en">About EHS Sentinel</h2>
+      </div>
+      <div class="rise">
+        <p class="l-sv sourcemix">Svenska primärkällor kombinerat med EU och internationell bevakning.</p><p class="l-en sourcemix">Swedish primary sources combined with EU and international monitoring.</p>
+        <p class="l-sv ram">Översiktlig veckoscanning utförd av AI.</p><p class="l-en ram">An overview level weekly scan carried out by AI.</p>
+        <p class="isolink"><span class="l-sv"><a href="#iso">ISO-standarder: revisionsstatus för 9001, 14001 och 45001</a></span><span class="l-en"><a href="#iso">ISO standards: revision status for 9001, 14001 and 45001</a></span></p>
+      </div>
+    </div>
+  </section>
+
+<footer>
+  <div class="wrap smal">
+<p class="l-sv">EHS Sentinel · 31 veckor historik · senast uppdaterad 10 augusti 2026</p><p class="l-en">EHS Sentinel · 31 weeks of history · last updated 10 August 2026</p>
+    <p class="l-sv">Skapad av Erik Mattsson, EM Safety &amp; Environment AB. Uppdateras en gång i veckan. Kontakt: <a href="mailto:em.safety.environment@gmail.com">em.safety.environment@gmail.com</a></p><p class="l-en">Created by Erik Mattsson, EM Safety &amp; Environment AB. Updated once a week. Contact: <a href="mailto:em.safety.environment@gmail.com">em.safety.environment@gmail.com</a></p>
+  </div>
+</footer>
+
+<script>
+/* Fyra saker: språkval, foldens inträdesrörelse, skalans markör och räknaren,
+   och att historikgrafen börjar till höger.
+
+   PRINCIP (D7c): slutläget ligger i CSS. Klassen .anim sätts av en inline-tagg i
+   <head>; finns ingen JS läggs den aldrig på och sidan visas statiskt, komplett,
+   på engelska. Skulle JS läggas på men sedan fela finns ett skyddsnät längst ner
+   som tvingar fram slutläget. Innehåll får ALDRIG bli osynligt av rörelse. */
+(function () {
+  var NYCKEL = 'ehs-sentinel-lang';
+  var html = document.documentElement;
+
+  function satt(lang, spara) {
+    if (lang !== 'sv' && lang !== 'en') return;
+    html.setAttribute('data-lang', lang);
+    html.setAttribute('lang', lang);
+    if (spara) { try { localStorage.setItem(NYCKEL, lang); } catch (e) {} }
+  }
+  try { var sparat = localStorage.getItem(NYCKEL); if (sparat) satt(sparat, false); } catch (e) {}
+  var knappar = document.querySelectorAll('.lang button[data-set]');
+  for (var i = 0; i < knappar.length; i++) {
+    knappar[i].addEventListener('click', function () { satt(this.getAttribute('data-set'), true); });
+  }
+
+  var graf = document.getElementById('trend');
+  if (graf) graf.scrollLeft = graf.scrollWidth;
+
+  var stilla = false;
+  try { stilla = window.matchMedia('(prefers-reduced-motion: reduce)').matches; } catch (e) {}
+
+  /* SKYDDSNÄT 1: fälls ett skript någonstans på sidan tas .anim bort helt, och
+     då gäller CSS-slutläget för allt. Rörelse får aldrig kosta innehåll. */
+  window.addEventListener('error', function () { html.classList.remove('anim'); });
+
+  /* SKYDDSNÄT 2: foldens fem steg står i sitt slutläge efter 2,4 s vad som än
+     händer. Gäller BARA folden — resten av sidan ska tona in on-scroll, och en
+     generell tvångsvisning skulle slå ut det. */
+  setTimeout(function () {
+    var kvar = document.querySelectorAll('.hero .rise:not(.in), .topbar .rise:not(.in)');
+    for (var i = 0; i < kvar.length; i++) kvar[i].classList.add('in');
+  }, 2400);
+
+  /* ── SIGNATURMOMENTET (D7c) ────────────────────────────────────────────
+     Skalans markör glider in från nollpunkten till veckans läge, samtidigt som
+     talet räknar upp. Det är den rörelse som BÄR budskapet: talet är en
+     koordinat på en skala, inte ett domslut.
+     Markörens slutläge står inline i CSS (left). Rörelsen läggs på ovanpå med
+     Web Animations, som lämnar slutläget orört — kan webbläsaren inte animera
+     står markören redan rätt. */
+  function animeraMarkor() {
+    var mk = document.querySelector('.skala-markor');
+    if (!mk || stilla || mk.getAttribute('data-klar')) return;
+    mk.setAttribute('data-klar', '1');
+    var slut = mk.style.left;
+    if (!slut || typeof mk.animate !== 'function') return;
+    try {
+      var rorelse = mk.animate(
+        [
+          { left: '50%', opacity: 0.35 },
+          { left: slut, opacity: 1 }
+        ],
+        { duration: 900, easing: 'cubic-bezier(.16,1,.3,1)', fill: 'none' }
+      );
+      /* Skyddsnät: hänger rörelsen (bakgrundsflik, strypt tidslinje) skulle
+         markören stå kvar på nollpunkten, alltså på FEL läge. Efter tiden
+         avbryts den och CSS-slutläget gäller. */
+      setTimeout(function () { try { rorelse.cancel(); } catch (e) {} }, 1300);
+    } catch (e) { /* slutläget står kvar i CSS, inget behöver lagas */ }
+  }
+
+  /* Räknaren: siffran räknar upp EN gång och landar på exakt källtexten. */
+  var num = document.querySelector('.hero-num');
+  function raknaUpp() {
+    if (!num || num.getAttribute('data-klar')) return;
+    num.setAttribute('data-klar', '1');
+    var slut = parseInt(num.getAttribute('data-tal'), 10);
+    var facit = num.getAttribute('data-text');
+    if (isNaN(slut)) { num.textContent = facit; return; }
+    if (stilla || slut === 0) { num.textContent = facit; return; }
+    var tid = 1000, t0 = null;
+    function tecken(v) { return v < 0 ? '\u2212' + Math.abs(v) : (v > 0 ? '+' + v : '0'); }
+    function steg(ts) {
+      if (t0 === null) t0 = ts;
+      var p = Math.min(1, (ts - t0) / tid);
+      var e = 1 - Math.pow(1 - p, 3);
+      if (p < 1) { num.textContent = tecken(Math.round(slut * e)); requestAnimationFrame(steg); }
+      else { num.textContent = facit; }
+    }
+    /* Nollställ FÖRST inne i en bildruta som faktiskt kördes. Sätts nollan innan
+       dess, och rAF sedan aldrig går (bakgrundsflik, strypt rAF, headless), står
+       sidan en stund med FEL tal i heroen. Nu står rätt tal till rörelsen är
+       bevisligen i gång. */
+    requestAnimationFrame(function (ts) {
+      t0 = ts;
+      num.textContent = tecken(0);
+      requestAnimationFrame(steg);
+    });
+    /* Skyddsnät: dör rAF mitt i skulle siffran frysa på ett FEL tal. Efter
+       animeringstiden sätts källtexten oavsett vad som hänt. */
+    setTimeout(function () { num.textContent = facit; }, tid + 400);
+  }
+
+  /* Kurvan ritas EN gång med en stroke-dash-transition. Skyddsnät: hänger
+     transitionen skulle kurvan bli helt osynlig (dashoffset = hela längden).
+     Efter ritningstiden tas streckningen bort, så kurvan alltid syns. */
+  function sakraKurvan() {
+    var linje = document.querySelector('.spark-line');
+    if (!linje) return;
+    setTimeout(function () {
+      linje.style.strokeDasharray = 'none';
+      linje.style.strokeDashoffset = '0';
+    }, stilla ? 0 : 1700);
+  }
+
+  if (!('IntersectionObserver' in window)) {
+    html.classList.remove('anim');
+    raknaUpp();
+    return;
+  }
+
+  /* Allt utanför folden tonar in när det kommer in i bild — EN gång, aldrig om.
+     unobserve direkt efter inträdet är vad som gör den engångsregeln. */
+  var obs = new IntersectionObserver(function (poster) {
+    for (var j = 0; j < poster.length; j++) {
+      var e = poster[j];
+      if (!e.isIntersecting) continue;
+      e.target.classList.add('in');
+      obs.unobserve(e.target);
+      if (e.target.classList.contains('spark')) sakraKurvan();
+    }
+  }, { rootMargin: '0px 0px -8% 0px', threshold: 0.12 });
+
+  /* Utanför folden: liten förskjutning inom varje grupp, så kort och rader
+     kommer in i läsordning i stället för alla på samma bildruta. */
+  var grupper = document.querySelectorAll('[data-stagger]');
+  for (var g = 0; g < grupper.length; g++) {
+    var barn = grupper[g].querySelectorAll('.rise');
+    for (var b = 0; b < barn.length; b++) {
+      if (barn[b].style.getPropertyValue('--d')) continue; /* folden har egen sekvens */
+      barn[b].style.setProperty('--d', (Math.min(b, 7) * 70) + 'ms');
+    }
+  }
+
+  /* FOLDEN ÄR första skärmen — dess inträde ÄR sidladdningen. Den startar
+     direkt, inte via observatören (som med negativ bottenmarginal annars kan
+     låta rörelsen ligga och vänta på en skroll som aldrig kommer).
+     Sekvensen 1→5 ligger som --d inline på elementen. */
+  function startaFold() {
+    var h = document.querySelectorAll('.hero .rise, .topbar .rise');
+    for (var i = 0; i < h.length; i++) h[i].classList.add('in');
+    /* Signaturmomentet startar när talet och skalan är inne, inte innan. */
+    setTimeout(function () { animeraMarkor(); raknaUpp(); }, stilla ? 0 : 620);
+  }
+  requestAnimationFrame(function () { requestAnimationFrame(startaFold); });
+  setTimeout(startaFold, 400);
+
+  var alla = document.querySelectorAll('.rise, .spark');
+  for (var k = 0; k < alla.length; k++) {
+    if (!alla[k].closest('.hero') && !alla[k].closest('.topbar')) obs.observe(alla[k]);
+  }
+})();
+</script>
+</body>
+</html>
