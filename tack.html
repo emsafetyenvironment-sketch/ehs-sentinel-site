@@ -111,6 +111,12 @@ section[id],footer[id]{scroll-margin-top:calc(var(--navh) + 20px)}
   font-size:min(7.4rem, calc((min(1180px, 100vw) - var(--pad)) * 0.97 / var(--em)));
   line-height:1.02;letter-spacing:-.025em;display:block;padding-bottom:.06em;
   color:var(--ink)}
+/* Veckans regimetikett: liten, diskret rad direkt över talet och skalan
+   (beslut Erik 17 aug 2026 — heroens stora ord är fast, etiketten flyttad hit).
+   Monospacevokabuläret från .kicker/.topweek, dämpad benvit. D3 gäller här
+   likaväl: ALDRIG larmfärg — rött/gult/grönt tillhör signalområdena. */
+.hero-regim{font-family:var(--fm);font-size:.72rem;font-weight:600;letter-spacing:.16em;
+  text-transform:uppercase;color:var(--ink-2);margin-top:16px;display:block}
 .hero-figs{display:flex;align-items:flex-end;flex-wrap:wrap;gap:14px 30px;margin-top:10px}
 /* D3: talet i monospace, gråskala, intill den synliga skalan */
 .hero-num{font-family:var(--fm);font-weight:600;font-size:clamp(2.4rem,7.5vw,4.4rem);

@@ -2,7 +2,7 @@
 <html lang="en" data-lang="en">
 <head>
 <link rel="icon" type="image/svg+xml" href="./favicon.svg" />
-    <meta charset="utf-8">
+<meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <!-- Relativ bas med avsikt: SAMMA katalog (publik-dist-v2) serveras under mer
      än en deploy-slug (skarpa ehs-sentinel och förhandsvisningen
@@ -131,6 +131,12 @@ section[id],footer[id]{scroll-margin-top:calc(var(--navh) + 20px)}
   font-size:min(7.4rem, calc((min(1180px, 100vw) - var(--pad)) * 0.97 / var(--em)));
   line-height:1.02;letter-spacing:-.025em;display:block;padding-bottom:.06em;
   color:var(--ink)}
+/* Veckans regimetikett: liten, diskret rad direkt över talet och skalan
+   (beslut Erik 17 aug 2026 — heroens stora ord är fast, etiketten flyttad hit).
+   Monospacevokabuläret från .kicker/.topweek, dämpad benvit. D3 gäller här
+   likaväl: ALDRIG larmfärg — rött/gult/grönt tillhör signalområdena. */
+.hero-regim{font-family:var(--fm);font-size:.72rem;font-weight:600;letter-spacing:.16em;
+  text-transform:uppercase;color:var(--ink-2);margin-top:16px;display:block}
 .hero-figs{display:flex;align-items:flex-end;flex-wrap:wrap;gap:14px 30px;margin-top:10px}
 /* D3: talet i monospace, gråskala, intill den synliga skalan */
 .hero-num{font-family:var(--fm);font-weight:600;font-size:clamp(2.4rem,7.5vw,4.4rem);
@@ -516,7 +522,7 @@ a{transition:color 150ms ease,text-decoration-color 150ms ease}
     <span class="topbar-id rise" style="--d:0ms">
       <span class="wordmark">EHS Sentinel</span>
       <span class="topsep" aria-hidden="true">·</span>
-      <span class="topweek"><span class="l-sv">V. 33 2026</span><span class="l-en">W33 2026</span></span>
+      <span class="topweek"><span class="l-sv">V. 34 2026</span><span class="l-en">W34 2026</span></span>
     </span>
     <div class="lang" role="group" aria-label="Language">
       <button type="button" data-set="sv">SV</button>
@@ -539,7 +545,8 @@ a{transition:color 150ms ease,text-decoration-color 150ms ease}
     <div class="wrap hero-inner">
       <p class="varde rise" style="--d:200ms"><span class="l-sv"><span class="varde-1">Veckans EHS-läge i Sverige och EU, läst på två minuter.</span> <span class="varde-2">Alla källor, varje måndag, fritt.</span></span><span class="l-en"><span class="varde-1">This week's EHS position in Sweden and the EU, read in two minutes.</span> <span class="varde-2">All sources, every Monday, free.</span></span></p>
       <div class="hero-mid">
-        <span class="hero-word rise l-sv" style="--d:400ms;--em:8.2322">Regelfriktion</span><span class="hero-word rise l-en" style="--d:400ms;--em:6.7902">Regulatory Friction</span>
+        <span class="hero-word rise l-sv" style="--d:400ms;--em:5.6106">Lägesbild</span><span class="hero-word rise l-en" style="--d:400ms;--em:6.6528">Situational Awareness</span>
+        <div class="hero-regim rise" style="--d:500ms"><span class="l-sv">Regelfriktion</span><span class="l-en">Regulatory Friction</span></div>
         <div class="hero-figs rise" style="--d:560ms">
           <div class="hero-num" data-tal="-5" data-text="−5">−5</div>
           <div class="skala">
